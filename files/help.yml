@@ -1,0 +1,208 @@
+﻿default:
+    - '&11~ Welcome to the Oracle guide! Commands are categorised for neatness.'
+    - '&11Use &10?help [category]&11 to list those commands. Categories:'
+    
+categories:
+    4: '&11&bEmotes - Server - Personal - Other - Admin - Dev - Ranks - Formats'
+    3: '&11&bEmotes - Server - Personal - Other - Admin - Ranks'
+    2: '&11&bEmotes - Server - Personal - Other - Admin - Ranks'
+    1: '&11&bEmotes - Server - Personal - Other'
+    0: '&11&bNone.'
+    
+emotes:
+    fliptable:
+        desc: '(╯°□°)╯︵ ┻━┻ '
+    puttableback:
+        desc: '┬─┬﻿ ノ( ゜-゜ノ)'
+    ohyou:
+        desc: '¯_(ツ)_/¯'
+    fff:
+        desc: 'ლ(ಠ益ಠლ)'
+    disapprove:
+        desc: 'ಠ_ಠ'
+    crie:
+        desc: 'ಥ_ಥ'
+    lenny:
+        desc: '( ͡° ͜ʖ ͡°)'
+    dongers:
+        desc: 'ヽ༼ຈل͜ຈ༽ﾉ'
+    butterfly:
+        desc: 'Ƹ̵̡Ӝ̵̨̄Ʒ'
+    partytime:
+        desc: '┏(-_-)┛┗(-_-﻿ )┓┗(-_-)┛┏(-_-)┓'
+    polarbear:
+        desc: 'ˁ˚ᴥ˚ˀ'
+    gun:
+        desc: '︻╦╤─'
+    pirate:
+        desc: '✌(◕‿-)✌'
+    happybirthday:
+        desc: '¸¸♬·¯·♩¸¸♪·¯·♫¸¸Happy Birthday To You¸¸♬·¯·♩¸¸♪·¯·♫¸¸'
+    sunglasses:
+        desc: '( •_•) ( •_•)>⌐■-■ (⌐■_■)'
+    rage:
+        desc: 't(ಠ益ಠt)'
+    cards:
+        desc: '[♥]]] [♦]]] [♣]]] [♠]]]'
+    gimme:
+        desc: '༼ つ ◕_◕ ༽つ'
+    monocle:
+        desc: 'ಠ_ರೃ'
+    ghost:
+        desc: '‹’’›(Ͼ˳Ͽ)‹’’›'
+    why:
+        desc: 'ლ(`◉◞౪◟◉‵ლ)'
+    praise:
+        desc: "し(*･∀･)／♡＼(･∀･*)ノ'a"
+
+server:
+    events:
+        desc: 'Next upcoming server event'
+    utc:
+        desc: 'Time now, in UTC'
+    nether:
+        desc: 'Convert xyz Overworld coordinates to the corresponding Nether coordinates'
+        args: '[x] [y] [z]'
+    overworld:
+        desc: 'Convert xyz Nether coordinates to the corresponding Overworld coordinates'
+        args: '[x] [y] [z]'
+
+personal:
+    notes:
+        desc: 'Create and delete notes'
+        args: 'new|edit|delete [filename] [text...]'
+    notes1:
+        desc: 'Search all notes for a specific term'
+        args: 'search|get searchterm|filename'
+    notes2:
+        desc: 'List all notes'
+        args: 'listall'
+    mail:
+        desc: 'Send mail to a player, who will be notified when they join'
+        args: 'send [recipient] [title] [message...]'
+    mail1:
+        desc: 'Read the contents of the mail or delete it'
+        args: 'read|delete [mail]'
+    mail2:
+        desc: 'List all mail addressed to you'
+        args: 'check'
+
+other:
+    pick:
+        desc: 'Picks a choice from a list at random'
+        args: '[choice 1] [choice 2] ... [choice n]'
+    cb:
+        desc: 'Chat with cleverbot (broken)' 
+        args: '[message...]'
+    diamonds:
+        desc: 'Gives target 64 diamonds in-game !WARNING! Unexpected results'
+        args: '[target]'
+    ayylmao:
+        desc: 'Link to ayy lmao image'
+    rps:
+        desc: "Play a game of Rock, Paper, Scissors with whomever you wish"
+        args: '[target]'
+    a:
+        desc: 'Answer a trivia question'
+        args: '[answer]'
+    score:
+        desc: 'Check your score'
+        args: 'check'
+    score1:
+        desc: 'Check the score leaderboards'
+        args: 'top [amount]'
+
+admin:
+    close:
+        desc: 'Turn off the Oracle bot'
+    restart:
+        desc: 'Restart the bot, to reload settings or code'
+    reload:
+        desc: 'Reload the bot, to reload settings or code without disconnecting'
+    sreload:
+        desc: 'Reload the bot, silently (best used with /msg Oracle)'
+    say:
+        desc: 'Instruct Oracle to repeat the message'
+        args: '[message...]'
+    attention:
+        desc: 'Alert all users in irc'
+    setrank:
+        desc: "Set a user's rank, allowing/restricting permission to certain actions. Use ?help ranks for more info"
+        args: '[target] [rank]'
+    getrank:
+        desc: "Return user's rank"
+        args: '[target]'
+    ban:
+        desc: "Set user's rank to 0. Oracle will auto-kick them if they join"
+        args: '[target]'
+    ignore:
+        desc: "Tell Oracle to ignore a user (doesn't notify them)"
+        args: '[target]'
+    pardon:
+        desc: "Tell Oracle to un-ignore a user (doesn't notify them)"
+        args: '[target]'
+    flood:
+        desc: "Reset/decrement the spamhandler's FLOOD dictionary"
+        args: 'reset|decrement'
+    trivia:
+        desc: 'Start a new round of Trivia, regardless if one is still going or not'
+        args: 'new'
+    trivia1:
+        desc: 'Disable and re-enable Trivia'
+        args: 'on|off'
+    score:
+        desc: "Check or reset a user's score"
+        args: 'check|reset [target]'
+    score1:
+        desc: "Add points to a user's score"
+        args: 'add [target] [amount]'
+
+dev:
+    makevar:
+        desc: 'Create a VAR file for a user'
+        args: '[target]'
+    getvar:
+        desc: 'Retrieves a specific var'
+        args: '[target] [var]'
+    setvar:
+        desc: 'Sets a specific value for var'
+        args: '[target] [var] [value]'
+    deletevar:
+        desc: 'Deletes the VAR file for target'
+        args: '[target]'
+    resetvar:
+        desc: 'Combined command for both deletevar and makevar'
+        args: '[target]'
+    cls:
+        desc: 'Clear console'
+    join:
+        desc: 'Imitate a join event'
+    joinn:
+        desc: 'Imitate a join event for a user'
+        args: '[target]'
+    raw:
+        desc: 'Send a raw message to IRC from Oracle'
+        args: '[args...]'
+    config:
+        desc: 'Get a value from the config file'
+        args: 'get [key]'
+    config1:
+        desc: 'Set a value in the config file (dont do this plz)'
+        args: 'set [key] [value]'
+    config2:
+        desc: 'Reload config during runtime (doesnt work for most things yet)'
+        args: 'reload'
+    ^:
+        desc: 'Sudo any command onto another user'
+        args: '[target] ?[cmd...]'
+
+formats:
+    - 'Formats are activated by using &N where N is 0-15 or b.'
+    - 'Can really only be used through hard-code or ?say'
+
+ranks:
+    - '0 > Banned user. Will be kicked automatically after joining.'
+    - '1 > Default user. Can do most commands.'
+    - '2 > Moderator. Can instruct Oracle to kick, mute or ban (lower ranked) users.'
+    - '3 > Administrator. Access to almost all commands needed, can restart/close Oracle if necessary.'
+    - '4 > Developer. Access to specific debug commands. If need be, admins can set themselves to dev with ?setrank.'
