@@ -38,7 +38,7 @@ class IRC(socket.socket):
         self.channel = channel or []
         self.password = password
         
-    def connect_(self, host, port):
+    def init_connect(self, host, port):
         # we may need these for later
         self.host = host
         self.port = port
@@ -46,10 +46,18 @@ class IRC(socket.socket):
         try:
             self.connect((host, port))
             self.send("NICK %s\r\n" % self.nick)
-            self.send("USER %s %s bla: BOT\r\n" % (self.ident, self.host))
+            print("NICK %s\r\n" % self.nick)
+            self.send("USER %s %s bla :BOT\r\n" % (self.ident, self.host))
+            print("USER %s %s bla :BOT\r\n" % (self.ident, self.host))
         except Exception, e:
             print e
             
+    def write(self, args, text=None):
+        if text is not None:
+            self.push((' '.join(args) + ' :' + text)[:500] + '\r\n')
+        else:
+            self.push(' '.join(args)[:500] + '\r\n')
+        
     def join_channel(self, channel):
         self.send("JOIN %s" % channel)
             
@@ -65,10 +73,10 @@ class IRC(socket.socket):
         print('PONGED! %s' % str(id))
         
     def mode(self, args):
-        self.send("MODE %s : %s" % (self.channel, args))
+        self.send("MODE %s : %s\r\n" % (self.channel, args))
         
     def kick(self, nick):
-        self.send("KICK %s %s" % (self.channel, nick))
+        self.send("KICK %s %s\r\n" % (self.channel, nick))
         
     def stop(self):
         sys.exit()

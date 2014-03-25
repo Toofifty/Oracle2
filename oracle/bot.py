@@ -33,7 +33,7 @@ def main():
 
     bot = Oracle(config)
     
-    bot.connect_('irc.esper.net', 6667)
+    bot.init_connect('irc.esper.net', 6667)
 
     readbuffer = ''
     
