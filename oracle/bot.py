@@ -50,7 +50,7 @@ def main():
             message = " ".join(line)
             
             if 'PING' in line[0]:
-                bot.ping_event(line[1:])
+                bot.ping_event(''.join(line[1:]))
                 
 if __name__ == "__main__":
     main()

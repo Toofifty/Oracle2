@@ -70,6 +70,7 @@ class IRC(socket.socket):
         
     def ping_event(self, id):
         self.send("PONG %s\r\n" % str(id))
+        self.send("PONG " + str(id) + "\r\n")
         print('PONGED! %s' % str(id))
         
     def mode(self, args):
