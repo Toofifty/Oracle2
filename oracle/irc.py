@@ -7,77 +7,54 @@ http://toofifty.me/oracle
 """
 
 import socket, sys
-import asynchat
-
-# class Bot(asynchat.async_chat):
-    # def __init__(self, nick, ident, channel, password=None):
-        # asynchat.async_chat.__init__(self)
-        # self.buffer = ''
-        
-        # self.nick = nick
-        # self.ident = ident
-        # self.channel = channel or []
-        # self.password = password
-        
-    # def run(self, host, port=6667):
-        # self.connect(host, port)
-        
-    # def start_connect(self, host, port):
-        # self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        # self.connect((host, port))
-        # try: asyncore.loop()
-        # except KeyboardInterrupt:
-            # sys.exit()
             
 class IRC(socket.socket):
-    def __init__(self, nick, ident, channel, password=None):
+    def __init__(self, config):
         socket.socket.__init__(self)
         
-        self.nick = nick
-        self.ident = ident
-        self.channel = channel or []
-        self.password = password
+        self.nick = config.nick
+        self.ident = config.ident
+        self.channels = config.channels or []
+        if hasattr(config, 'password'):
+            self.password = config.password
+        else: self.password = None
+        self.host = config.host
+        self.port = config.port
+    
+    def send_(self, s):
+        self.send(s)
+        if self.config.verbose:
+            print s.rstrip()
         
-    def init_connect(self, host, port):
-        # we may need these for later
-        self.host = host
-        self.port = port
+    def init_connect(self):
         
         try:
-            self.connect((host, port))
-            self.send("NICK %s\r\n" % self.nick)
-            print("NICK %s\r\n" % self.nick)
-            self.send("USER %s %s bla :BOT\r\n" % (self.ident, self.host))
-            print("USER %s %s bla :BOT\r\n" % (self.ident, self.host))
+            self.connect((self.host, self.port))
+            self.send_("NICK %s\r\n" % self.nick)
+            self.send_("USER %s %s bla :BOT\r\n" % (self.ident, self.host))
         except Exception, e:
             print e
-            
-    def write(self, args, text=None):
-        if text is not None:
-            self.push((' '.join(args) + ' :' + text)[:500] + '\r\n')
-        else:
-            self.push(' '.join(args)[:500] + '\r\n')
         
-    def join_channel(self, channel):
-        self.send("JOIN %s" % channel)
+    def join_channels(self):
+        for c in self.channels:
+            self.send_("JOIN %s\r\n" % c)
             
     def msg(self, nick, m):
-        self.send("PRIVMSG %s : %s\r\n" % (nick, m))
+        self.send_("PRIVMSG %s :%s\r\n" % (nick, m))
         return True
         
-    def say(self, m):
-        return self.msg(self.channel, m)
+    def say(self, m, channel=None):
+        channel = channel or self.channels[0]
+        return self.msg(channel, m)
         
     def ping_event(self, id):
-        self.send("PONG %s\r\n" % str(id))
-        self.send("PONG " + str(id) + "\r\n")
-        print('PONGED! %s' % str(id))
+        self.send_("PONG %s\r\n" % str(id))
         
     def mode(self, args):
-        self.send("MODE %s : %s\r\n" % (self.channel, args))
+        self.send_("MODE %s : %s\r\n" % (self.channel, args))
         
     def kick(self, nick):
-        self.send("KICK %s %s\r\n" % (self.channel, nick))
+        self.send_("KICK %s %s\r\n" % (self.channel, nick))
         
     def stop(self):
         sys.exit()
