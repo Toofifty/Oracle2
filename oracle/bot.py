@@ -6,11 +6,12 @@ bot.py
 http://toofifty.me/oracle
 """
 
+import string
 import irc
 
-class Oracle(irc.Bot):
+class Oracle(irc.IRC):
     def __init__(self, config):
-        irc.Bot.__init__(self, config.nick, config.ident, 
+        irc.IRC.__init__(self, config.nick, config.ident, 
                          config.channel, config.password)
         self.config = config
         self.doc = {}
@@ -18,3 +19,38 @@ class Oracle(irc.Bot):
         
     def setup(self):
         pass
+        
+class Configuration:
+    def __init__(self):
+        self.nick       = 'Perry'
+        self.ident      = 'PerryBot'
+        self.channel    = '#toofifty'
+        self.password   = 'none'
+        
+def main():
+
+    config = Configuration()
+
+    bot = Oracle(config)
+    
+    bot.connect_('irc.esper.net', 6667)
+
+    readbuffer = ''
+    
+    while True:
+        readbuffer += bot.recv(1024)
+        
+        temp = string.split(readbuffer, "\n")
+        readbuffer = temp.pop()
+        
+        for line in temp:
+            print line
+            
+            line = string.split(string.rstrip(line))
+            message = " ".join(line)
+            
+            if 'PING' in line[0]:
+                bot.ping_event(line[1:])
+                
+if __name__ == "__main__":
+    main()
