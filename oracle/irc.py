@@ -30,35 +30,45 @@ class IRC(socket.socket):
         
         try:
             self.connect((self.host, self.port))
-            self.send_("NICK %s\r\n" % self.nick)
-            self.send_("USER %s %s bla :BOT\r\n" % (self.ident, self.host))
+            self.send_('NICK %s\r\n' % self.nick)
+            self.send_('USER %s %s bla :BOT\r\n' % (self.ident, self.host))
         except Exception, e:
             print e
         
     def join_channels(self):
         for c in self.channels:
-            self.send_("JOIN %s\r\n" % c)
+            self.send_('JOIN %s\r\n' % c)
             
     def msg(self, nick, m):
-        self.send_("PRIVMSG %s :%s\r\n" % (nick, m))
+        # NOTICE sends a message without a new window
+        self.send_('NOTICE %s :%s\r\n' % (nick, m))
         return True
         
     def say(self, m, channel=None):
-        channel = channel or self.channels[0]
-        return self.msg(channel, m)
+        # PRIVMSG usually opens a new window
+        if channel == 'all':
+            for c in self.channels:
+                self.send_('PRIVMSG %s :%s\r\n' % (c, m))
+        else:
+            channel = channel or self.channels[0]
+            self.send_('PRIVMSG %s :%s\r\n' % (channel, m))
+        return True
         
     def ping_event(self, id):
-        self.send_("PONG %s\r\n" % str(id))
+        self.send_('PONG %s\r\n' % str(id))
         
     def mode(self, args):
-        self.send_("MODE %s : %s\r\n" % (self.channel, args))
+        self.send_('MODE %s : %s\r\n' % (self.channel, args))
         
     def kick(self, nick):
-        self.send_("KICK %s %s\r\n" % (self.channel, nick))
+        self.send_('KICK %s %s\r\n' % (self.channel, nick))
         
     def stop(self):
+        self.quit()
         sys.exit()
         
+    def quit(self):
+        self.send_('QUIT\r\n')
             
-if __name__ == "__main__":
+if __name__ == '__main__':
     print __doc__

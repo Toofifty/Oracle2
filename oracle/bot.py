@@ -7,12 +7,14 @@ http://toofifty.me/oracle
 """
 
 import string, sys
-import irc
+import irc, plugins
 
 class Oracle(irc.IRC):
     def __init__(self, config):
         irc.IRC.__init__(self, config)
         self.config = config
+        print sys.argv
+        self.plugins = plugins.Loader(config)
         self.doc = {}
         self.setup()
         self.init_connect()
@@ -50,7 +52,7 @@ class Oracle(irc.IRC):
         
         # On bot join
         if 'JOIN' in w[1] and ":" + self.config.nick + "!" in w[0]:
-            self.say("Never fear, Perry is here!", w[2])
+            self.say("Never fear, %s is here!" % self.config.nick, w[2])
             return
             
         # MODE changes
@@ -69,10 +71,10 @@ class Oracle(irc.IRC):
             print e
             
         if 'PART' in w[1]:
-            return self.user_part_event(nick, chan)
+            return self.user_part_event(nick, w[2])
             
         if 'JOIN' in w[1]:
-            return self.user_join_event(nick, chan)
+            return self.user_join_event(nick, w[2])
             
         if 'PRIVMSG' in w[1]:
             w[3] = w[3].replace(':', '', 1)
@@ -86,6 +88,17 @@ class Oracle(irc.IRC):
         print message
         if '.close' in message:
             sys.exit()
+            
+        input = Input(nick, channel, message)      
+        
+        if input.command.startswith(self.config.char):
+            input.command = input.command.split('.', 1)[1]
+            if self.plugins.process_command(self, input):
+                pass
+            else:
+                self.msg(nick, 'Command not recognised!')
+        else:
+            return True
     
     def message_event(self, nick, message):
         pass
@@ -96,16 +109,39 @@ class Oracle(irc.IRC):
     def user_part_event(self, nick, channel):
         pass
     
+    def reload_modules(self, module=None):
+        if module is None:
+            return self.plugins.reload_all()
+        return self.plugins.reload_module(module)
+    
+    def get_modules(self):
+        return self.plugins.get_modules()
+    
+class Input:
+    def __init__(self, nick, channel, message):
+        self.nick = nick
+        self.channel = channel
+        self.command = message[0]
+        if len(message[1:]) < 1:
+            self.args = None
+        else:
+            self.args = message[1:]
+    
 class Configuration:
     def __init__(self):
-        self.nick       = u'Perry'
-        self.ident      = u'PerryBot'
+        self.nick       = u'Oracle2'
+        self.ident      = u'Oracle2'
         self.channels   = [u'#toofifty',
-                           u'#toofiftyone']
+                           u'#toofiftyone',
+                           u'#rapid']
         self.host = u'irc.esper.net'
         self.port = 6667
         
-        self.verbose = False
+        self.verbose = True
+        
+        self.included = []
+        self.excluded = []
+        self.char = '.'
         
 def main():
 
