@@ -45,6 +45,7 @@ class Loader(object):
         self.modules.append(module)
         try: module.init()
         except AttributeError: pass
+        return True
         
     def process_command(self, bot, input):
         """
@@ -61,12 +62,23 @@ class Loader(object):
         if input.command == 'init':
             return False
         
-        for m in self.modules:
-            try:
-                if hasattr(m, input.command):
-                    exec 'm.%s(self, bot, input)' % input.command
+        if input.command == 'doc':
+            for m in self.modules:
+                if input.args[0] == m.__name__:
+                    if m.__doc__ is not None:
+                        for line in m.__doc__.split('\n'):
+                            bot.l_say(line, input, 0)
+                    else:
+                        bot.msg('No doc found for that module.', input, 0)
                     return True
-            except Exception: raise
+            else:
+                bot.l_say('No doc found for that module. Maybe try modules.%s?'\
+                         % input.args[0], input, 0)
+                return True
+        
+        for m in self.modules:
+            if hasattr(m, input.command):
+                return getattr(m, input.command)(self, bot, input)
         return False
             
     def get_modules(self):
@@ -81,7 +93,7 @@ class Loader(object):
             list.append(mod.__name__)
         return list
         
-    def reload_all(self):
+    def reload_all(self, bot, input):
         """
         Iterates over all modules and
         sends them to the reload_module()
@@ -91,18 +103,18 @@ class Loader(object):
         """
         try:
             for mod in self.modules:
-                self.reload_module(mod)
+                self.reload_module(mod, bot, input)
         except Exception, e: 
-            print e
+            return False
         return True
     
     def get_module_from_string(self, module_name):
         try:
             return sys.modules[module_name]
-        except:
-            return False
+        except KeyError:
+            raise
         
-    def reload_module(self, module):
+    def reload_module(self, module, bot, input):
         """
         Reloads the module given to it
         If there is any exception, returns
@@ -114,8 +126,12 @@ class Loader(object):
         try: 
             reload(module)
             print '\tReloaded', module.__name__
+            bot.l_say('Reloaded %s' % module.__name__, input, 0)
         except Exception, e:
             print '\tFailed reloading of', module.__name__
+            print '\tError', e
+            bot.l_say('Failed to reload %s. Error: %s'\
+                       % (module.__name__, e), input, 0)
             return False
         return True
     
