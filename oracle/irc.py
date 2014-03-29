@@ -84,6 +84,9 @@ class IRC(socket.socket):
         self.quit()
         sys.exit()
         
+    def whois(self, nick):
+        return self.send_('WHOIS %s\r\n' % nick)
+        
     def quit(self):
         self.send_('QUIT\r\n')
             

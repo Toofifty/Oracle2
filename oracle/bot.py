@@ -8,26 +8,50 @@ http://toofifty.me/oracle
 
 import string, sys, traceback
 from optparse import OptionParser, OptionGroup
-import irc, plugins
+import irc, plugins, user
 
 VERSION = '2.0.0a'
 
 class Oracle(irc.IRC):
-    """"""
+    """Main Bot Class
+    
+    Decodes messages and performs certain events
+    depending on their nature.
+    """
     def __init__(self, config):
-        """"""
+        """Initializes the bot with the IRC
+        socket class. Also assigns it a plugin
+        loader, and tries to connect to the
+        server.
+        
+        returns None
+        """
         irc.IRC.__init__(self, config)
         self.config = config
         self.plugins = plugins.Loader(config)
-        self.doc = {}
-        self.setup()
+        self.users = {}
         self.init_connect()
         
-    def setup(self):
-        """"""
-        
     def process(self, w):
-        """"""
+        """Processes a raw message from the server.
+        Used to discern:
+            - PRIVMSGs
+            - PINGs
+            - JOINs
+            - MODEs
+            - PARTs
+            - NICKs
+            - End of MOTD
+            - NickServ asking for auth
+            - NAMES response
+            - WHOIS response
+            - JOIN of bot
+            
+        And sends the messages to the respective
+        functions.
+        
+        returns Boolean        
+        """
         if self.config.verbose:
             print ' '.join(w)
             
@@ -68,19 +92,34 @@ class Oracle(irc.IRC):
         # MOTD messages
         if '372' in w[1]:
             return
-            
-        # End of things that can be done without a nick
+        
+        # WHOIS - 'User' :is logged in as
+        if '330' in w[1]:
+            try:
+                if not self.users.has_key(w[3]):
+                    self.users[w[3]] = user.User(w[4])
+                    self.users[w[3]].set_nick(w[3])
+            except:
+                traceback.print_exc()
+            return True
+        
+        #################################################
+        # End of things that can be done without a nick #
+        #################################################
         try:
             # Isolate nick from user string
             nick = w[0].split('!',1)[0].replace(':','')
         except Exception, e:
-            print e
+            return
             
         if 'PART' in w[1]:
             return self.user_part_event(nick, w[2])
             
         if 'JOIN' in w[1]:
             return self.user_join_event(nick, w[2])
+        
+        if 'NICK' in w[1]:
+            return self.user_nick_event(nick, w[2])
             
         if 'PRIVMSG' in w[1]:
             w[3] = w[3].replace(':', '', 1)
@@ -91,9 +130,19 @@ class Oracle(irc.IRC):
                 return self.message_event(nick, ' '.join(w[3:]))
             
     def chat_event(self, nick, channel, message):
-        """"""
+        """Chat event called by 'PRIVMSG channel'.
+        Checks if the message is a command and
+        sends it to the command processor at
+        self.plugins
+        
+        returns Boolean
+        """
         
         def get_level(char):
+            """Gets the privacy level of char
+            
+            returns int -> 0-2, 0 being most private
+            """
             if char == self.config.char:
                 return 1
             if char == self.config.prchar:
@@ -120,20 +169,31 @@ class Oracle(irc.IRC):
             return True
     
     def message_event(self, nick, message):
-        """"""
+        """Message event called by 'PRIVMSG self'."""
     
     def user_join_event(self, nick, channel):
-        """"""
+        """User join event called by 'JOIN user'."""
+        self.whois(nick)
     
     def user_part_event(self, nick, channel):
-        """"""
+        """User part event called by 'PART user'."""
+        if self.users.has_key(nick):
+            self.users[nick].part()
+            
+    def user_nick_event(self, nick, new_nick):
+        """User nick change event called by 'NICK user'."""
         
     def bot_join_event(self, chan):
+        """Bot join event called by 'JOIN self'."""
         self.say(("Never fear, %s is here!" % self.config.nick), chan)
         return
     
     def reload_modules(self, input):
-        """"""
+        """Reload modules within self.plugins.
+        Used when called by the command '.reload'
+        
+        returns Boolean
+        """
         print 'Reloading modules...'
         if input.args is None:
             return self.plugins.reload_all(self, input)
@@ -149,12 +209,26 @@ class Oracle(irc.IRC):
         return True
     
     def get_char(self):
+        """returns string -> self.char
+        """
         return self.char
     
-class Input:
-    """"""
+    def open_user(self, name):
+        """Opens a new user class - in order
+        to not need upper-level imports in the
+        modules.
+        
+        returns user.User()
+        """
+        return user.User(name)
+    
+class Input(object):
+    """Input class
+    Bundles input information into an object to
+    be sent around through functions and commands.
+    """
     def __init__(self, nick, channel, message):
-        """"""
+        """Initialize a new set of input"""
         self.nick = nick
         self.channel = channel
         self.command = None
@@ -165,12 +239,19 @@ class Input:
         self.level = 1
         
     def set_level(self, level):
+        """Set the privacy level of the input"""
         self.level = level
+        return self.level
         
     def set_command(self, cmd):
+        """Set the command of the input"""
         self.command = cmd
+        return self.command
         
 def parse_options():
+    """Parse options from the console using
+    optparse's OptionParser
+    """
     p = OptionParser(version='Version: %s' % VERSION)
     d = OptionGroup(p, 'Debug Options')
     i = OptionGroup(p, 'IRC Options')
@@ -240,7 +321,11 @@ def parse_options():
     return p.parse_args()
         
 def main():
-    """"""
+    """Main Bot Loop
+    Initializes first classes, and loops over
+    reading a buffer to generate lines to be
+    processed in bot.process
+    """
 
     config, args = parse_options()
 

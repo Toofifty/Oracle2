@@ -9,9 +9,8 @@ http://toofifty.me/
 import os, sys
 import traceback
 
-class Loader(object):
-    """
-    Plugin Loader class
+class Loader:
+    """Plugin Loader class
     
     Finds and imports all allowed modules
     from path/modules. Modules are only allowed
@@ -20,8 +19,7 @@ class Loader(object):
     """
     
     def __init__(self, config):
-        """
-        Iterates through possible modules to
+        """Iterates through possible modules to
         load and sends them to load_module()
         
         returns None
@@ -34,8 +32,7 @@ class Loader(object):
                     self.load_module(file.replace('.py', ''))
                     
     def load_module(self, module_name):
-        """
-        Loads module with string module_name
+        """Loads module with string module_name
         
         returns None        
         """
@@ -48,8 +45,7 @@ class Loader(object):
         return True
         
     def process_command(self, bot, input):
-        """
-        Finds the command in the aforementioned
+        """Finds the command in the aforementioned
         loaded modules and returns it (will
         return True if all is good).
         Will return False if the command
@@ -82,8 +78,7 @@ class Loader(object):
         return False
             
     def get_modules(self):
-        """
-        Iterates over loaded modules and 
+        """Iterates over loaded modules and 
         adds them to a list
         
         returns List (strings)
@@ -94,8 +89,7 @@ class Loader(object):
         return list
         
     def reload_all(self, bot, input):
-        """
-        Iterates over all modules and
+        """Iterates over all modules and
         sends them to the reload_module()
         function
         
@@ -110,13 +104,14 @@ class Loader(object):
     
     def get_module_from_string(self, module_name):
         try:
+            if module_name == 'bot':
+                module_name = '__main__'
             return sys.modules[module_name]
-        except KeyError:
-            raise
+        except KeyError, e:
+            print e
         
     def reload_module(self, module, bot, input):
-        """
-        Reloads the module given to it
+        """Reloads the module given to it
         If there is any exception, returns
         False.
         
@@ -126,9 +121,9 @@ class Loader(object):
         try: 
             reload(module)
             print '\tReloaded', module.__name__
-            bot.l_say('Reloaded %s' % module.__name__, input, 0)
+            bot.l_say('Reloaded module: %s' % module.__name__, input, 0)
         except Exception, e:
-            print '\tFailed reloading of', module.__name__
+            print '\tFailed reloading of module:', module.__name__
             print '\tError', e
             bot.l_say('Failed to reload %s. Error: %s'\
                        % (module.__name__, e), input, 0)
