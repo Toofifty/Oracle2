@@ -10,7 +10,9 @@ import string, sys
 import irc, plugins
 
 class Oracle(irc.IRC):
+    """"""
     def __init__(self, config):
+        """"""
         irc.IRC.__init__(self, config)
         self.config = config
         print sys.argv
@@ -20,9 +22,10 @@ class Oracle(irc.IRC):
         self.init_connect()
         
     def setup(self):
-        pass
+        """"""
         
     def process(self, w):
+        """"""
         if self.config.verbose:
             print ' '.join(w)
             
@@ -85,40 +88,54 @@ class Oracle(irc.IRC):
                 return self.message_event(nick, ' '.join(w[3:]))
             
     def chat_event(self, nick, channel, message):
-        print message
-        if '.close' in message:
-            sys.exit()
+        """"""
+        print message            
+        if nick != 'Toofifty':
+            return False
             
         input = Input(nick, channel, message)      
         
         if input.command.startswith(self.config.char):
             input.command = input.command.split('.', 1)[1]
-            if self.plugins.process_command(self, input):
-                pass
-            else:
+            if not self.plugins.process_command(self, input):
                 self.msg(nick, 'Command not recognised!')
         else:
             return True
     
     def message_event(self, nick, message):
-        pass
+        """"""
     
     def user_join_event(self, nick, channel):
-        pass
+        """"""
     
     def user_part_event(self, nick, channel):
-        pass
+        """"""
     
-    def reload_modules(self, module=None):
-        if module is None:
+    def reload_modules(self, nick=None, modules=None):
+        """"""
+        print 'Reloading modules...'
+        if modules is None:
             return self.plugins.reload_all()
-        return self.plugins.reload_module(module)
+        
+        for m_s in modules:
+            m = self.plugins.get_module_from_string(m_s)
+            if not m:
+                self.msg(nick, '%s is not a valid module, try modules.%s' % (m_s, m_s))
+                return False
+            
+            if not self.plugins.reload_module(m):
+                return False
+            
+        return True
     
     def get_modules(self):
+        """"""
         return self.plugins.get_modules()
     
 class Input:
+    """"""
     def __init__(self, nick, channel, message):
+        """"""
         self.nick = nick
         self.channel = channel
         self.command = message[0]
@@ -128,12 +145,13 @@ class Input:
             self.args = message[1:]
     
 class Configuration:
+    """"""
     def __init__(self):
+        """"""
         self.nick       = u'Oracle2'
         self.ident      = u'Oracle2'
         self.channels   = [u'#toofifty',
-                           u'#toofiftyone',
-                           u'#rapid']
+                           u'#toofiftyone']
         self.host = u'irc.esper.net'
         self.port = 6667
         
@@ -144,6 +162,7 @@ class Configuration:
         self.char = '.'
         
 def main():
+    """"""
 
     config = Configuration()
 
@@ -154,8 +173,7 @@ def main():
     while True:
         try:
             readbuffer += bot.recv(32)
-        except (KeyBoardInterrupt, SystemExit):
-            print 'KeyBoardInterrupt'
+        except (SystemExit):
             raise
         except Exception, e:
             print e

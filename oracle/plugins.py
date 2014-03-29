@@ -6,7 +6,7 @@ Created by Alex Matheson
 http://toofifty.me/
 """
 
-import os
+import os, sys
 import traceback
 
 class Loader(object):
@@ -64,7 +64,8 @@ class Loader(object):
         for m in self.modules:
             try:
                 if hasattr(m, input.command):
-                    exec 'm.' + input.command + '(self, bot, input)'
+                    exec 'm.%s(self, bot, input)' % input.command
+                    return True
             except Exception: raise
         return False
             
@@ -89,9 +90,17 @@ class Loader(object):
         returns True
         """
         try:
-            self.reload_module(mod for mod in self.modules)
-        except Exception, e: raise
+            for mod in self.modules:
+                self.reload_module(mod)
+        except Exception, e: 
+            print e
         return True
+    
+    def get_module_from_string(self, module_name):
+        try:
+            return sys.modules[module_name]
+        except:
+            return False
         
     def reload_module(self, module):
         """
@@ -101,8 +110,12 @@ class Loader(object):
         
         returns Boolean
         """
-        try: reload(module)
+        
+        try: 
+            reload(module)
+            print '\tReloaded', module.__name__
         except Exception, e:
+            print '\tFailed reloading of', module.__name__
             return False
         return True
     

@@ -1,4 +1,4 @@
-#!/user/bin/env python
+# -- coding: latin-1 --
 """
 Oracle 2.0 IRC Bot
 irc.py
@@ -51,8 +51,15 @@ class IRC(socket.socket):
                 self.send_('PRIVMSG %s :%s\r\n' % (c, m))
         else:
             channel = channel or self.channels[0]
-            self.send_('PRIVMSG %s :%s\r\n' % (channel, m))
-        return True
+            print 'First type', type(m)
+            if type(m) == str:
+                m = unicode(m, 'utf-8', errors='ignore')
+            print 'End type', type(m)
+            #print type(m.encode('ascii','replace'))
+            try:
+                self.send_('PRIVMSG %s :%s\r\n' % (channel, m))
+            except Exception, e:
+                self.send_('PRIVMSG %s :%s\r\n' % (channel, e))
         
     def ping_event(self, id):
         self.send_('PONG %s\r\n' % str(id))
