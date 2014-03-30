@@ -154,7 +154,7 @@ class Oracle(irc.IRC):
                 return 2
         
         print '<%s(%s)>' % (nick, channel), ' '.join(message)            
-        if nick != 'Toofifty':
+        if nick != 'Toofifty' and nick != 'Oracle':
             return False
                 
         input = Input(nick, channel, message)

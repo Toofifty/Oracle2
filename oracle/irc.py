@@ -43,6 +43,8 @@ class IRC(socket.socket):
             
     def join_channel(self, channel):
         self.send_('JOIN %s\r\n' % channel)
+        if not channel in self.channels:
+            self.channels.append(channel)
             
     def msg(self, nick, m):
         # NOTICE sends a message without a new window

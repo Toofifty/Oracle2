@@ -105,8 +105,11 @@ def say(l, bot, input):
     !a [message...]
     !r admin
     """
-    bot.l_say(' '.join(input.args), input)
-    return True
+    try:
+        bot.l_say(' '.join(input.args), input)
+        return True
+    except TypeError:
+        return False
 
 def exe(l, bot, input):
     """
