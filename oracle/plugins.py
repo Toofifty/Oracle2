@@ -58,20 +58,6 @@ class Loader:
         if input.command == 'init':
             return False
         
-        if input.command == 'doc':
-            for m in self.modules:
-                if input.args[0] == m.__name__:
-                    if m.__doc__ is not None:
-                        for line in m.__doc__.split('\n'):
-                            bot.l_say(line, input, 0)
-                    else:
-                        bot.msg('No doc found for that module.', input, 0)
-                    return True
-            else:
-                bot.l_say('No doc found for that module. Maybe try modules.%s?'\
-                         % input.args[0], input, 0)
-                return True
-        
         for m in self.modules:
             if hasattr(m, input.command):
                 return getattr(m, input.command)(self, bot, input)
@@ -107,8 +93,8 @@ class Loader:
             if module_name == 'bot':
                 module_name = '__main__'
             return sys.modules[module_name]
-        except KeyError, e:
-            print e
+        except KeyError:
+            raise
         
     def reload_module(self, module, bot, input):
         """Reloads the module given to it

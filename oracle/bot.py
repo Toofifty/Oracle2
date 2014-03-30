@@ -111,6 +111,9 @@ class Oracle(irc.IRC):
             nick = w[0].split('!',1)[0].replace(':','')
         except Exception, e:
             return
+        
+        if 'INVITE' in w[1]:
+            return self.bot_invite_event(nick, w[3])
             
         if 'PART' in w[1]:
             return self.user_part_event(nick, w[2])
@@ -188,6 +191,12 @@ class Oracle(irc.IRC):
         self.say(("Never fear, %s is here!" % self.config.nick), chan)
         return
     
+    def bot_invite_event(self, nick, chan):
+        """Invite event called by 'INVITE self'."""
+        print nick, 'has invited me to', chan
+        self.join_channel(chan)
+        return
+    
     def reload_modules(self, input):
         """Reload modules within self.plugins.
         Used when called by the command '.reload'
@@ -199,8 +208,9 @@ class Oracle(irc.IRC):
             return self.plugins.reload_all(self, input)
         
         for m_s in input.args:
-            m = self.plugins.get_module_from_string(m_s)
-            if not m:
+            try:
+                m = self.plugins.get_module_from_string(m_s)
+            except KeyError:
                 self.l_say('%s is not a valid module, try modules.%s'\
                             % (m_s, m_s), input, 0)
                 return False

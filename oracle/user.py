@@ -54,7 +54,7 @@ class User:
     def create_file(self):
         print 'Creating user file for %s...' % self.true_name
         with open(self.path, 'w') as f:
-            f.write('{"seen": 0, "last_nick": "%s", "rank": 1, "points": 0, '
+            f.write('{"seen": 0, "last_nick": "%s", "rank": "user", "points": 0, '
                     '"commands": 0}' % self.nick)
             
     def get_user_data(self):

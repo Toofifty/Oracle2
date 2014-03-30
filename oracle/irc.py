@@ -39,7 +39,10 @@ class IRC(socket.socket):
         
     def join_channels(self):
         for c in self.channels:
-            self.send_('JOIN %s\r\n' % c)
+            self.join_channel(c)
+            
+    def join_channel(self, channel):
+        self.send_('JOIN %s\r\n' % channel)
             
     def msg(self, nick, m):
         # NOTICE sends a message without a new window

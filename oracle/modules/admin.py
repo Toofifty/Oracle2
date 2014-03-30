@@ -43,7 +43,7 @@ def close(l, bot, input):
     """
     !d Close Oracle
     !a <message...>
-    !r developer
+    !r admin
     """
     if input.args is None:
         bot.l_say('Goodbye!', input, 3)
@@ -84,7 +84,7 @@ def restart(l, bot, input):
     """
     !d Restart Oracle
     !a <message...>
-    !r developer
+    !r admin
     """
     if input.args is None:
         bot.l_say('I\'ll be back in a jiffy!', input, 3)
@@ -103,7 +103,7 @@ def say(l, bot, input):
     """
     !d Instruct Oracle to repeat a word or phrase
     !a [message...]
-    !r developer
+    !r admin
     """
     bot.l_say(' '.join(input.args), input)
     return True
@@ -135,11 +135,32 @@ def whois(l, bot, input):
     """
     !d Send a WHOIS message to the IRC server
     !a <nick>
-    !r developer
+    !r admin
     """
     if input.args is None:
         return bot.whois(input.nick)
     return bot.whois(' '.join(input.args))
+    
+def doc(l, b, i):
+    """
+    !d Return the main docstring of a module
+    !a [module]
+    !r developer
+    """
+    for m in l.get_modules():
+        if i.args[0] == m.__name__:
+            if m.__doc__ is not None:
+                for line in m.__doc__.split('\n'):
+                    b.l_say(line, i, 0)
+            else:
+                b.l_say('No doc found for that module.', i, 0)
+            return True
+        else:
+            if 'modules.' in i.args[0]:
+                return b.l_say('No doc found for that module.', i, 0)
+            return b.l_say('No doc found for that module. '
+                             'Maybe try modules.%s?' % i.args[0], 
+                             i, 0)
     
 def open(l, bot, input):
     """
