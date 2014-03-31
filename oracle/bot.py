@@ -6,7 +6,7 @@ bot.py
 http://toofifty.me/oracle
 """
 
-import string, sys, traceback
+import string, sys, traceback, os
 from optparse import OptionParser, OptionGroup
 import irc, plugins, user
 
@@ -155,6 +155,8 @@ class Oracle(irc.IRC):
                 
         input = Input(nick, channel, message)
         
+        input.set_user(self.get_user(nick))
+        
         print '<%s(%s)>' % (nick, channel), ' '.join(message)            
         
         if 'https://www.youtube.com/watch?v' in ' '.join(message):
@@ -207,6 +209,15 @@ class Oracle(irc.IRC):
         self.join_channel(chan)
         return
     
+    def exit(self):
+        """Bot exit event called by .restart and .close
+        Ensures saving of user files among other things
+        (to be added later)
+        """
+        for u in self.users:
+            self.users[u].part()
+        self.quit()
+    
     def reload_modules(self, input):
         """Reload modules within self.plugins.
         Used when called by the command '.reload'
@@ -248,13 +259,35 @@ class Oracle(irc.IRC):
         
         returns user.User()
         """
+        PATH = os.path.join('..', 'files', 'users')
+        
+        try:
+            return self.users[nick]
+        except KeyError:
+            if nick + '.json' in os.listdir(PATH):
+                self.users[nick] = self.open_user(nick)
+                return self.users[nick]
+            else:
+                return False
+        
+    def try_create_user(self, nick):
+        """Tries to grab a user from self.users
+        if none are found, creates a new one
+        
+        returns user.User()
+        """
         try:
             return self.users[nick]
         except KeyError:
             self.users[nick] = self.open_user(nick)
             return self.users[nick]
+        
     
     def get_version(self):
+        """Version getter
+        
+        returns String -> VERSION
+        """
         return VERSION
     
 class Input(object):
@@ -272,6 +305,7 @@ class Input(object):
         else:
             self.args = message[1:]
         self.level = 1
+        self.user = None
         
     def set_level(self, level):
         """Set the privacy level of the input"""
@@ -282,6 +316,11 @@ class Input(object):
         """Set the command of the input"""
         self.command = cmd
         return self.command
+    
+    def set_user(self, user):
+        """Set the user class of the input"""
+        self.user = user
+        return self.user
         
 def parse_options():
     """Parse options from the console using

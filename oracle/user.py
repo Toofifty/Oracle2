@@ -34,6 +34,12 @@ class User:
     def get_points(self):
         return self.points
     
+    def get_commands(self):
+        return self.commands
+    
+    def get_name(self):
+        return self.true_name
+    
     def set_points(self, am):
         self.points = am
         return self.points

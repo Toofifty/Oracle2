@@ -49,7 +49,7 @@ def close(l, bot, input):
         bot.l_say('Goodbye!', input, 3)
     else:
         bot.say(' '.join(input.args).capitalize(), channel='all')
-    bot.quit()
+    bot.exit()
     sys.exit()
     
 def fpart(l, bot, input):
@@ -90,7 +90,7 @@ def restart(l, bot, input):
         bot.l_say('I\'ll be back in a jiffy!', input, 3)
     else:
         boy.say(' '.join(input.args).capitalize(), channel='all')
-    bot.quit()
+    bot.exit()
     print '\n' * 5
     
     args = sys.argv[:]

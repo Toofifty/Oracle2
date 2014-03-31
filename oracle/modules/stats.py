@@ -97,7 +97,7 @@ def score(l, b, i):
         if not n + '.json' in os.listdir(PATH):
             return b.l_say('%s does not seem to have a user file.' % n, i, 0)
         user = b.get_user(n)
-        b.l_say('%s has %d points.' % (n, user.get_points()), i, 0)
+        b.l_say('%s has %d points.' % (user.get_name(), user.get_points()), i, 0)
         
     def set(l, b, i):
         pass
@@ -119,5 +119,27 @@ def score(l, b, i):
         b.l_say('Usage: .score [top|check]', i, 0)
     return True
     
+def commandcount(l, b, i):
+    """
+    !d Get the amount of commands a user has performed
+    !a <user>
+    !r user
+    """
+    if i.args is None:
+        b.l_say('Commands sent by you: %d' % i.user.get_commands(), i, 0)
+    else:
+        u = b.get_user(i.args[0])
+        if u:
+            b.l_say('Commands sent by %s: %d' % (u.get_name(), u.get_commands()), i, 0)
+        else:
+            b.l_say('No user found under the name "%s".' % i.args[0], i, 0)
+    return True
     
+def cmdcount(l, b, i):
+    """
+    !d Alias for .commandcount
+    !a <user>
+    !r user
+    """
+    return commandcount(l, b, i)
     

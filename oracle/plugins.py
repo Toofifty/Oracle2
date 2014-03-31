@@ -59,6 +59,8 @@ class Loader:
         if input.command == 'init':
             return False
         
+        input.user.increment_commands()
+        
         for m in self.modules:
             if hasattr(m, input.command):
                 self.try_command(bot, input, m)
