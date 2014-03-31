@@ -26,7 +26,8 @@ class Loader:
         """
         self.modules = []
         print 'Loading modules...'
-        for file in os.listdir('../Oracle/modules'):
+        path = os.path.join('..', 'oracle', 'modules')
+        for file in os.listdir(path):
             if not file in config.excluded or file in config.included:
                 if not '.pyc' in file and not '__init__' in file:
                     self.load_module(file.replace('.py', ''))
@@ -60,8 +61,25 @@ class Loader:
         
         for m in self.modules:
             if hasattr(m, input.command):
-                return getattr(m, input.command)(self, bot, input)
-        return False
+                self.try_command(bot, input, m)
+                return
+                
+        bot.l_say('%s is not recognised as an internal or external command.' \
+                  % input.command, input, 0)
+        return True
+    
+    def try_command(self, bot, input, m):
+        try:
+            # If return False
+            if not getattr(m, input.command)(self, bot, input):
+                bot.l_say('Command returned false.', input, 0)
+                return
+        except Exception, e:
+            traceback.print_exc()
+            bot.l_say('Something went wrong with that command.', input, 0)
+            bot.l_say('Please alert an admin about the problem.', input, 0)
+            bot.l_say('Error: %s' % e, input, 0)
+            return
             
     def get_modules(self):
         """Iterates over loaded modules and 

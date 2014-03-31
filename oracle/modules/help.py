@@ -116,3 +116,10 @@ def help(loader, bot, input):
         # Categories. Need an algorithm to get these
         bot.l_say(get_categories(input), input, 0)
         return True
+    
+def version(l, b, i):
+    """
+    !d Get the version of Oracle
+    !r user
+    """
+    return b.l_say('Oracle Version %s' % b.get_version(), i, 0)

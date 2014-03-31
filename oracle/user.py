@@ -4,9 +4,10 @@ class User:
     def __init__(self, name):
         print 'Creating user object for %s...' % name
         self.true_name = name
+        self.nick = name
         self.path = os.path.join('..', 'files', 'users', '%s.json' % name)
         if not os.path.exists(self.path):
-            self.create_file(self.path)
+            self.create_file()
         with open(self.path) as f:
             self.data = json.load(f)
         self.get_json_data()

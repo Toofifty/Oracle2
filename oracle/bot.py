@@ -10,7 +10,7 @@ import string, sys, traceback
 from optparse import OptionParser, OptionGroup
 import irc, plugins, user
 
-VERSION = '2.0.0a'
+VERSION = '2.0.1a'
 
 class Oracle(irc.IRC):
     """Main Bot Class
@@ -152,12 +152,23 @@ class Oracle(irc.IRC):
                 return 0
             if char == self.config.puchar:
                 return 2
-        
-        print '<%s(%s)>' % (nick, channel), ' '.join(message)            
-        if nick != 'Toofifty' and nick != 'Oracle':
-            return False
                 
         input = Input(nick, channel, message)
+        
+        print '<%s(%s)>' % (nick, channel), ' '.join(message)            
+        
+        if 'https://www.youtube.com/watch?v' in ' '.join(message):
+            input.set_command('parselink')
+            input.set_level(1)
+            input.args = []
+            # Handle multiple links
+            for word in message:
+                if 'https://www.youtube.com/' in word:
+                    input.args.append(word)                    
+            self.plugins.process_command(self, input)
+        
+        if nick != 'Toofifty' and nick != 'Oracle' and nick != 'Manyman':
+            return False
         
         charset = (self.config.char, self.config.prchar, self.config.puchar)
         
@@ -165,14 +176,13 @@ class Oracle(irc.IRC):
             if message[0].startswith(c):
                 input.set_command(message[0].split(c, 1)[1])
                 input.set_level(get_level(c))
-                if not self.plugins.process_command(self, input):
-                    self.l_say('Command failed to execute!', input, 0)
-                    return True
+                self.plugins.process_command(self, input)
         else:
             return True
     
     def message_event(self, nick, message):
         """Message event called by 'PRIVMSG self'."""
+        print '<%s(NOTICE)>' % (nick), ' '.join(message)
     
     def user_join_event(self, nick, channel):
         """User join event called by 'JOIN user'."""
@@ -231,6 +241,21 @@ class Oracle(irc.IRC):
         returns user.User()
         """
         return user.User(name)
+    
+    def get_user(self, nick):
+        """Tries to grab a user from self.users
+        if none are found, creates a new one
+        
+        returns user.User()
+        """
+        try:
+            return self.users[nick]
+        except KeyError:
+            self.users[nick] = self.open_user(nick)
+            return self.users[nick]
+    
+    def get_version(self):
+        return VERSION
     
 class Input(object):
     """Input class

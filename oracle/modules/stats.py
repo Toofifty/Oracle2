@@ -5,7 +5,7 @@ stats.py plugin module
 http://toofifty.me/oracle
 """
 
-import os, traceback
+import os, inspect, traceback
 
 def init():
     print '\t%s loaded' % __name__
@@ -78,14 +78,26 @@ def score(l, b, i):
         !a [user] [amount]
         !r admin
     """
+    
+    PATH = os.path.join('..', 'files', 'users')
+    
     def top(l, b, i):
-        pass
+        b.l_say('test', i, 0)
         
     def check(l, b, i):
-        pass
+        n = i.nick
+        if not n + '.json' in os.listdir(PATH):
+            return b.l_say('You don\'t seem to have a user file - make one by '
+                           'rejoining the IRC channel.', i, 0)
+        user = b.get_user(n)
+        return b.l_say('You have %d points.' % (user.get_points()), i, 0)
         
     def peek(l, b, i):
-        pass
+        n = i.args[1]
+        if not n + '.json' in os.listdir(PATH):
+            return b.l_say('%s does not seem to have a user file.' % n, i, 0)
+        user = b.get_user(n)
+        b.l_say('%s has %d points.' % (n, user.get_points()), i, 0)
         
     def set(l, b, i):
         pass
@@ -97,11 +109,15 @@ def score(l, b, i):
         pass
     
     # CHILD COMMAND CONSTRUCTOR
+    # Copy/paste-able :)
     try:
-        getattr(score, input.args[0])(l, b, i)
+        # This doesn't work :(
+        #getattr(score, i.args[0])(l, b, i)
+        exec ('%s(l, b, i)' % i.args[0]) in globals(), locals()
     except Exception, e:
         traceback.print_exc()
         b.l_say('Usage: .score [top|check]', i, 0)
+    return True
     
     
     
