@@ -6,7 +6,7 @@ emotes.py plugin module
 http://toofifty.me/oracle
 """
 
-def init():
+def _init(bot):
     print '\t%s loaded' % __name__
     
 def fliptable(l, b, i): 

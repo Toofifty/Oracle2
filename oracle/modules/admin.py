@@ -8,7 +8,7 @@ http://toofifty.me/oracle
 import sys, os, subprocess
 import traceback, time
 
-def init():
+def _init(bot):
     print '\t%s loaded' % __name__
     
 def reload(l, bot, input):
@@ -27,7 +27,7 @@ def modules(l, bot, input):
     !d Get all loaded modules
     !r developer
     """
-    for m in l.get_modules():
+    for m in l.get_modules_list():
         bot.l_say(m.capitalize(), input, 0)
     return True
 
@@ -37,13 +37,17 @@ def load(l, bot, input):
     !a [module]
     !r developer
     """
-    return l.load_module(input.args[0])
+    fl = l.load_module(input.args[0], bot)
+    
+    if fl:
+        b.l_say('Module loaded.', i, 0)
+    return fl
 
 def close(l, bot, input):
     """
     !d Close Oracle
     !a <message...>
-    !r admin
+    !r administrator
     """
     if input.args is None:
         bot.l_say('Goodbye!', input, 3)
@@ -84,7 +88,7 @@ def restart(l, bot, input):
     """
     !d Restart Oracle
     !a <message...>
-    !r admin
+    !r administrator
     """
     if input.args is None:
         bot.l_say('I\'ll be back in a jiffy!', input, 3)
@@ -103,7 +107,7 @@ def say(l, bot, input):
     """
     !d Instruct Oracle to repeat a word or phrase
     !a [message...]
-    !r admin
+    !r administrator
     """
     try:
         bot.l_say(' '.join(input.args), input)
@@ -138,7 +142,7 @@ def whois(l, bot, input):
     """
     !d Send a WHOIS message to the IRC server
     !a <nick>
-    !r admin
+    !r administrator
     """
     if input.args is None:
         return bot.whois(input.nick)
@@ -164,6 +168,52 @@ def doc(l, b, i):
             return b.l_say('No doc found for that module. '
                              'Maybe try modules.%s?' % i.args[0], 
                              i, 0)
+            
+def getrank(l, b, i):
+    """
+    !d Return a user's (or own) rank
+    !a <user>
+    !r administrator
+    """
+    if i.args is None:
+        b.l_say('You are rank %s.' % i.user.get_rank().upper(), i, 0)
+    else:
+        try:
+            rank = b.get_user(i.args[0]).get_rank()
+            b.l_say('%s\'s rank is %s.' % (i.args[0], rank.upper()), i, 0)
+        except Exception, e:
+            b.l_say('No rank found for %s: %s' % (i.args[0], e), i, 0)
+    return True
+
+def setrank(l, b, i):
+    """
+    !d Set a user's rank
+    !a [user] [rank]
+    !r administrator
+    """
+    ranks = ['developer',
+             'administrator',
+             'moderator',
+             'user']
+    if i.args is None or len(i.args) < 2:
+        b.l_say('Usage: .setrank [user] [developer|administrator|moderator|user]', i, 0)
+        return True
+    if i.args[1] in ranks:
+        try:
+            user = b.get_user(i.args[0])
+            b.l_say('%s\'s rank set to %s.' % (i.args[0], user.set_rank(i.args[1]).upper()), i, 0)
+        except Exception, e:
+            b.l_say('No user found for %s: %s' % (i.args[0], e), i, 0)
+    return True
+
+def makeadmin(l, b, i):
+    """
+    !d Fallback command to make a yourself admin
+    !r hidden
+    """
+    i.user.set_rank('administrator')
+    b.l_say('You are now administrator', i, 0)
+    return True
     
 def open(l, bot, input):
     """

@@ -8,10 +8,17 @@ http://toofifty.me/oracle
 import urllib, json
 from datetime import datetime
 
-def init():
+from format import GREEN, RED, BLUE, WHITE, BOLD, ITALICS
+
+def _init(bot):
     print '\t%s loaded' % __name__
     
-def fullparselink(l, b, i):
+def fullparseyoutube(l, b, i):
+    """
+    !d Get the full metadata sample from a YouTube link
+    !a [link]
+    !r developer
+    """
     if i.args is not None:
         vidid = i.args[0]
         b.l_say('Getting data for %s' % vidid, i, 0)
@@ -37,7 +44,7 @@ def fullparselink(l, b, i):
     
     return True
 
-def parselink(l, b, i):
+def parseyoutube(l, b, i):
     """
     !d Parse a YouTube link
     !a [link] <link2> ...
@@ -59,10 +66,10 @@ def parselink(l, b, i):
         dislikes = data['entry']['yt$rating']['numDislikes']
         description = data['entry']['media$group']['media$description']['$t']
         d = data['entry']['media$group']['yt$uploaded']['$t']
-        # 2008-04-08T07:05:41.000Z
+        
         d2 = datetime(year=int(d[0:4]), month=int(d[5:7]), day=int(d[8:10]),
                         hour=int(d[11:13]), minute=int(d[14:16]), second=int(d[17:19]))
-        date = d2.strftime("%A %d. %B %Y, %X")
+        date = d2.strftime("%d %B %Y")
         
         favourites = '{0:,}'.format(int(favourites))
         views = '{0:,}'.format(int(views))
@@ -72,10 +79,15 @@ def parselink(l, b, i):
         if description == '':
             description = 'No description available.'
         
-        b.l_say('Youtube video - %s by %s [%ss]' % (title, author, duration), i)
-        b.l_say('Views: %s Favourites: %s L|D: %s|%s Uploaded: %s' \
-                % (views, favourites, likes, dislikes, date), i)
-        b.l_say('Description: %s' % description, i)
+        b.l_say('%sYoutube video%s \'%s\' [%ss]' % (RED, WHITE,
+            title, duration), i)
+            
+        b.l_say('Views %s | Likes:dislikes %s:%s | Uploaded: %s' \
+                % (GREEN + views + WHITE, 
+                GREEN + likes + WHITE, RED + dislikes + WHITE, 
+                date), i)
+                
+        b.l_say('Description: %s' % ITALICS + description, i)
     
     if i.args is not None:
         for link in i.args:
@@ -86,6 +98,14 @@ def parselink(l, b, i):
             parsevid(vidid)
         
     else:
-        b.l_say('Usage: parselink [vidid] [value]', i, 0)
+        b.l_say('Usage: parselink [vidid...]', i, 0)
     
     return True
+
+def pyt(l, b, i):
+    """
+    !d Alias for .parseyoutube
+    !a [link] <link2> ...
+    !r user
+    """
+    return parseyoutube(l, b, i)

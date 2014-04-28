@@ -46,6 +46,7 @@ class User:
     
     def set_rank(self, rank):
         self.rank = rank
+        return self.rank
         
     def set_nick(self, nick):
         self.last_nick = nick
@@ -70,6 +71,10 @@ class User:
             udata[key] = getattr(self, key)
             print key, udata[key]
         return udata
+        
+    def update_seen(self):
+        self.seen = time.asctime()
+        return True
         
     def part(self):
         try:

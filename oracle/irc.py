@@ -24,10 +24,10 @@ class IRC(socket.socket):
     
     def send_(self, s):
         if self.config.verbose:
-            print '--> %s --> sent %d bytes'% (s.rstrip(), self.send('%s\r\n' % s))
-            return True
+            print '--> %s'% s.rstrip()
+            return self.send('%s\r\n' % s) > 0
         else:
-            return self.send('%s\r\n' % s)
+            return self.send('%s\r\n' % s) > 0
         
     def init_connect(self):
         
@@ -54,6 +54,9 @@ class IRC(socket.socket):
     def msg(self, nick, m):
         # NOTICE sends a message without a new window
         return self.send_('NOTICE %s :%s' % (nick, m))
+            
+    def pmsg(self, nick, m):
+        return self.send_('PRIVMSG %s :%s' % (nick, m))
         
     def say(self, m, channel=None):
         # PRIVMSG usually opens a new window
@@ -69,13 +72,24 @@ class IRC(socket.socket):
                 return self.send_('PRIVMSG %s :%s' % (channel, e))
                 
     def l_say(self, m, input, f_level=1):
+        if input.game is not '':
+            nick = input.game
+            message = input.nick + ' ' + m
+        else:
+            nick = input.nick
+            message = m
+            
         if input.level == 0:
-            return self.msg(input.nick, m)
+            if input.game is not '':
+                return self.pmsg(nick, message)
+            return self.msg(nick, message)
         elif input.level == 1:
             if f_level == 0:
-                return self.msg(input.nick, m)
+                if input.game is not '':
+                    return self.pmsg(nick, message)
+                return self.msg(nick, message)
             elif f_level == 1:
-                return self.say(m, input.channel)
+                return self.say(message, input.channel)
             else:
                 return self.say(m, 'all')
         else:

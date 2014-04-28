@@ -8,7 +8,9 @@ http://toofifty.me/oracle
 import types, inspect
 import traceback
 
-def init():
+from format import WHITE, CYAN, GREY, PURPLE
+
+def _init(bot):
     print '\t%s loaded' % __name__
     
 # All commands are called with the arguments
@@ -18,35 +20,55 @@ def help(loader, bot, input):
     """Welcome to the Oracle guide! Commands are categorised for neatness.
     Use .help [category] to list those commands. Categories:"""
     
+    BASE = CYAN
+    BRKT = PURPLE
+    FILL = GREY
+    
     def format_children(func, doc):
-        print 'Formatting children functions'
+        user_rank = input.user.get_rank()
         doc = doc.split('\n')[1:]
-        print doc
         commands = {}
         list = []
         cmd = None
         for line in doc:
             line = line.strip(' ')
-            print line
-            print 'CMD', cmd
+            
             if line.startswith('!c '):
-                print 'Starts with !c'
                 cmd = line.replace('!c ', '').upper()
-                print cmd
                 list.append(cmd)
                 commands[cmd] = {}
-                print 'Name =', cmd
             elif line.startswith('!d '):
-                print 'Starts with !d'
-                print 'Desc of', cmd, '=', line.replace('!d ', '').capitalize()
                 commands[cmd]['desc'] = line.replace('!d ', '').capitalize()
             elif line.startswith('!a '):
                 commands[cmd]['args'] = line.replace('!a ', '').upper()
             elif line.startswith('!r '):
                 commands[cmd]['rank'] = line.replace('!r ', '').upper()
-        print commands
+                command_rank = commands[cmd]['rank']
+                try:
+                        
+                    if command_rank == 'HIDDEN':
+                        list.remove(cmd)
+                        return
+                    if user_rank == 'developer':
+                        return
+                    if command_rank == 'DEVELOPER':
+                        list.remove(cmd)
+                    if user_rank == 'administrator':
+                        return
+                    if command_rank == 'ADMINISTRATOR':
+                        list.remove(cmd)
+                    if user_rank == 'moderator':
+                        return
+                    if command_rank == 'MODERATOR':
+                        list.remove(cmd)
+                    if user_rank == 'user':
+                        return
+                    if command_rank == 'USER':
+                        list.remove(cmd)
+                except Exception, e:
+                    traceback.print_exc()
+                
         for c in sorted(list):
-            print c
             if commands[c].has_key('args'):
                 cmd = '%s %s %s' % (func.__name__.upper(), c, commands[c]['args'])
             else:
@@ -55,7 +77,9 @@ def help(loader, bot, input):
             return_command(cmd, commands[c]['desc'], commands[c]['rank'])
     
     def formatdoc(func):
+        user_rank = input.user.get_rank()
         doc = inspect.getdoc(func)
+        command_rank = ''
         args = rank = None
         desc = doc
         
@@ -69,20 +93,63 @@ def help(loader, bot, input):
                 elif line.startswith('!a '):
                     args = line.replace('!a ', '').upper()
                 elif line.startswith('!r '):
-                    rank = line.replace('!r ', '').upper()                    
+                    command_rank = line.replace('!r ', '').upper()
+                    try:
+                        if command_rank == 'HIDDEN':
+                            return
+                        if user_rank == 'developer':
+                            continue
+                        if command_rank == 'DEVELOPER':
+                            return
+                        if user_rank == 'administrator':
+                            continue
+                        if command_rank == 'ADMINISTRATOR':
+                            return
+                        if user_rank == 'moderator':
+                            continue
+                        if command_rank == 'MODERATOR':
+                            return
+                        if user_rank == 'user':
+                            continue
+                        if command_rank == 'USER':
+                            return
+                    except Exception, e:
+                        traceback.print_exc()                 
                     
         if args is None:
             cmd = func.__name__.upper()
         else:
             cmd = '%s %s' % (func.__name__.upper(), args)
         
-        return_command(cmd, desc, rank)
+        return_command(cmd, desc, command_rank)
     
     def return_command(cmd, desc, rank):
-        return bot.l_say('%s - %s' % (cmd.ljust(25), desc), input, 0)
+        if cmd is None: cmd = ''
+        if desc is None: desc = ''
+    
+        if input.game == '':
+            str = '%s - %s' % (BASE + cmd.ljust(25), FILL + desc)
+        else:
+            str = '%s - %s' % (BASE + cmd, FILL + desc)
+                
+        str = str.replace('<',BRKT+'<'+FILL).replace('>',BRKT+'>'+BASE)
+        str = str.replace('[',BRKT+'['+FILL).replace(']',BRKT+']'+BASE)
+        str = str.replace('...',BRKT+'...'+BASE)
+    
+        return bot.l_say(str, input, 0)
     
     def get_categories(input):
-        return 'none'
+        rank = input.user.get_rank()
+        if rank == 'developer':
+            return 'Emotes - Server - Personal - Other - Moderator - Admin - Dev'
+        elif rank == 'administrator':
+            return 'Emotes - Server - Personal - Other - Moderator - Admin'
+        elif rank == 'moderator':
+            return 'Emotes - Server - Personal - Other - Moderator'
+        elif rank == 'user':
+            return 'Emotes - Server - Personal - Other'
+        else:
+            return 'Sorry! No categories found!'
     
     try:
         # Grab the module from the laoded modules
@@ -93,7 +160,7 @@ def help(loader, bot, input):
                      if isinstance(getattr(mod, a, None), 
                                    types.FunctionType)]
         for func in func_list:
-            if func.__name__ != 'init':
+            if not func.__name__.startswith('_'):
                 formatdoc(func)
         return True
     
@@ -101,16 +168,17 @@ def help(loader, bot, input):
         # Try to see if the query is a function of its
         # own, and not a module
         if input.args is not None:
-            for m in loader.get_modules():
+            for m in loader.get_modules_list():
                 m = loader.get_module_from_string(m)
                 if hasattr(m, input.args[0]):
                     func = getattr(m, input.args[0])
                     formatdoc(func)
                     return True
         
+        traceback.print_exc()
+        
         # Can't find the query anywhere, so we'll
         # print the default help message
-        print 'Printing help list...'
         for line in inspect.getdoc(help).split('\n'):
             bot.l_say(line, input, 0)
         # Categories. Need an algorithm to get these

@@ -18,7 +18,7 @@ class Loader:
     config.excluded.    
     """
     
-    def __init__(self, config):
+    def __init__(self, config, bot):
         """Iterates through possible modules to
         load and sends them to load_module()
         
@@ -30,9 +30,9 @@ class Loader:
         for file in os.listdir(path):
             if not file in config.excluded or file in config.included:
                 if not '.pyc' in file and not '__init__' in file:
-                    self.load_module(file.replace('.py', ''))
+                    self.load_module(file.replace('.py', ''), bot)
                     
-    def load_module(self, module_name):
+    def load_module(self, module_name, bot):
         """Loads module with string module_name
         
         returns None        
@@ -41,7 +41,7 @@ class Loader:
         module = getattr(__import__(name), module_name)
         
         self.modules.append(module)
-        try: module.init()
+        try: module._init(bot)
         except AttributeError: pass
         return True
         
@@ -56,7 +56,7 @@ class Loader:
         """
         print 'Command received!'
         
-        if input.command == 'init':
+        if input.command.startswith('_'):
             return False
         
         input.user.increment_commands()
@@ -83,7 +83,7 @@ class Loader:
             bot.l_say('Error: %s' % e, input, 0)
             return
             
-    def get_modules(self):
+    def get_modules_list(self):
         """Iterates over loaded modules and 
         adds them to a list
         
@@ -93,6 +93,13 @@ class Loader:
         for mod in self.modules:
             list.append(mod.__name__)
         return list
+        
+    def get_modules(self):
+        """Gets the module list
+        
+        returns List (modules)
+        """
+        return self.modules
         
     def reload_all(self, bot, input):
         """Iterates over all modules and
@@ -125,9 +132,14 @@ class Loader:
         """
         
         try: 
+            # Easy method for closing threads etc.
+            try: module._del(bot)
+            except AttributeError: pass
             reload(module)
             print '\tReloaded', module.__name__
             bot.l_say('Reloaded module: %s' % module.__name__, input, 0)
+            try: module._init(bot)
+            except AttributeError: pass
         except Exception, e:
             print '\tFailed reloading of module:', module.__name__
             print '\tError', e

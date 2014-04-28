@@ -28,7 +28,7 @@ class Oracle(irc.IRC):
         """
         irc.IRC.__init__(self, config)
         self.config = config
-        self.plugins = plugins.Loader(config)
+        self.plugins = plugins.Loader(config, self)
         self.users = {}
         self.init_connect()
         
@@ -152,15 +152,33 @@ class Oracle(irc.IRC):
                 return 0
             if char == self.config.puchar:
                 return 2
+        
+        bot = ''
+        if nick == 'RapidSurvival' or nick == 'RapidCreative':
+            try:
+                bot = nick
+                if message[0].startswith('<'):
+                    nick = message[0].replace('<','').replace('>','')
+                    message = message[1:]
+                elif message[1] is 'whispers':
+                    nick = message[0]
+                    message = message[2:]
+            except IndexError:
+                pass
                 
         input = Input(nick, channel, message)
         
-        input.set_user(self.get_user(nick))
+        if bot is not '': input.ingame(bot)
+        
+        user = self.try_create_user(nick)
+        user.update_seen()
+        
+        input.set_user(user)
         
         print '<%s(%s)>' % (nick, channel), ' '.join(message)            
         
         if 'https://www.youtube.com/watch?v' in ' '.join(message):
-            input.set_command('parselink')
+            input.set_command('parseyoutube')
             input.set_level(1)
             input.args = []
             # Handle multiple links
@@ -255,7 +273,7 @@ class Oracle(irc.IRC):
     
     def get_user(self, nick):
         """Tries to grab a user from self.users
-        if none are found, creates a new one
+        if none are found does not create a new file
         
         returns user.User()
         """
@@ -306,6 +324,10 @@ class Input(object):
             self.args = message[1:]
         self.level = 1
         self.user = None
+        self.game = ''
+        
+    def ingame(self, bot):
+        self.game = bot
         
     def set_level(self, level):
         """Set the privacy level of the input"""
@@ -372,7 +394,7 @@ def parse_options():
                       'and receive private responses                    '
                       'default: %default')
     b.add_option('--public-char', action='store', type='string', dest='puchar', 
-                 default='?',
+                 default='$',
                  help='change the character used to access bot commands '
                       'and receive public responses (admin only)        '
                       'default: %default')

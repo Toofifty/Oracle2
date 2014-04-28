@@ -7,7 +7,9 @@ http://toofifty.me/oracle
 
 import os, inspect, traceback
 
-def init():
+from format import CYAN, WHITE, GREY, PURPLE, RED, GREEN, _random
+
+def _init(bot):
     print '\t%s loaded' % __name__
     
 def seen(l, b, i):
@@ -17,7 +19,7 @@ def seen(l, b, i):
     !r user
     """
     if i.args is None:
-        b.l_say('Usage: .seen [user]', i, 0)
+        b.l_say('Usage: %s.seen [user]' % CYAN, i, 0)
         return True
     else:
         seen = None
@@ -36,9 +38,9 @@ def seen(l, b, i):
                     continue
                 
         if seen is not None:
-            b.l_say('Last seen: %s' % seen, i, 0)
+            b.l_say('Last seen: %s' % PURPLE + seen, i, 0)
         else:
-            b.l_say('User %s not found in the database.' % i.args[0],
+            b.l_say('User %s not found in the database.' % (GREY + i.args[0] + WHITE),
                        i, 0)
         return True
         
@@ -49,7 +51,7 @@ def listusers(l, b, i):
     """
     b.l_say('Users:', i, 0)
     for f in os.listdir(os.path.join('..', 'files', 'users')):
-        b.l_say('    %s' % f.replace('.json', ''), i, 0)
+        b.l_say('    %s' % (_random() + f.replace('.json', '')), i, 0)
     return True
 
 def score(l, b, i):
@@ -64,19 +66,19 @@ def score(l, b, i):
     !c peek
         !d Check a user's score
         !a [user]
-        !r admin
+        !r moderator
     !c set
         !d Set a user's score
         !a [user] [points]
-        !r admin
+        !r administrator
     !c add
         !d Add an amount to a user's score
         !a [user] [amount]
-        !r admin
+        !r administrator
     !c rem
         !d Remove an amount from a user's score
         !a [user] [amount]
-        !r admin
+        !r administrator
     """
     
     PATH = os.path.join('..', 'files', 'users')
@@ -87,17 +89,17 @@ def score(l, b, i):
     def check(l, b, i):
         n = i.nick
         if not n + '.json' in os.listdir(PATH):
-            return b.l_say('You don\'t seem to have a user file - make one by '
-                           'rejoining the IRC channel.', i, 0)
+            return b.l_say('%sYou don\'t seem to have a user file - make one '
+                           'by rejoining the IRC channel.' % RED, i, 0)
         user = b.get_user(n)
-        return b.l_say('You have %d points.' % (user.get_points()), i, 0)
+        return b.l_say('You have %s%d%s points.' % (GREEN, user.get_points(), WHITE), i, 0)
         
     def peek(l, b, i):
         n = i.args[1]
         if not n + '.json' in os.listdir(PATH):
-            return b.l_say('%s does not seem to have a user file.' % n, i, 0)
+            return b.l_say('%s does not seem to have a user file.' % (GREY + n + WHITE), i, 0)
         user = b.get_user(n)
-        b.l_say('%s has %d points.' % (user.get_name(), user.get_points()), i, 0)
+        b.l_say('%s has %s%d%s points.' % (GREY+user.get_name()+WHITE, GREEN, user.get_points(), WHITE), i, 0)
         
     def set(l, b, i):
         pass
@@ -111,12 +113,10 @@ def score(l, b, i):
     # CHILD COMMAND CONSTRUCTOR
     # Copy/paste-able :)
     try:
-        # This doesn't work :(
-        #getattr(score, i.args[0])(l, b, i)
         exec ('%s(l, b, i)' % i.args[0]) in globals(), locals()
     except Exception, e:
         traceback.print_exc()
-        b.l_say('Usage: .score [top|check]', i, 0)
+        b.l_say('Usage: %s.score [top|check]' % CYAN, i, 0)
     return True
     
 def commandcount(l, b, i):
@@ -126,13 +126,13 @@ def commandcount(l, b, i):
     !r user
     """
     if i.args is None:
-        b.l_say('Commands sent by you: %d' % i.user.get_commands(), i, 0)
+        b.l_say('Commands sent by you: %s%d' % (PURPLE, i.user.get_commands()), i, 0)
     else:
         u = b.get_user(i.args[0])
         if u:
-            b.l_say('Commands sent by %s: %d' % (u.get_name(), u.get_commands()), i, 0)
+            b.l_say('Commands sent by %s: %s%d' % (GREY+u.get_name()+WHITE, PURPLE, u.get_commands()), i, 0)
         else:
-            b.l_say('No user found under the name "%s".' % i.args[0], i, 0)
+            b.l_say('No user found under the name "%s".' % (GREY+i.args[0]+WHITE), i, 0)
     return True
     
 def cmdcount(l, b, i):
