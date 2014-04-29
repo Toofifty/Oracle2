@@ -1,5 +1,6 @@
 import random
-from format import CYAN
+import re
+from format import CYAN, GREY, PURPLE, WHITE
 
 def _init(bot):
     print '\t%s loaded' % __name__
@@ -72,3 +73,48 @@ def overworld(l, b, i):
         except:
             usage()
     return True   
+    
+def alias(l, b, i):
+    """
+    !d Define a custom command to any word/phrase
+    !a [new|remove] "[alias]" "[command+args]"
+    !r user
+    """
+    charset = (b.config.char, b.config.prchar, b.config.puchar)
+    
+    if i.user.get_alias_list() is []:
+        i.user.add_attribute('aliases', [])
+    try:
+        if i.args[0].lower() == 'new':
+            splitter = re.compile(r'"(.*?)" "(.*?)"')
+            message = ' '.join(i.args[1:])
+            spl_match = splitter.match(message)
+            if spl_match is not None:
+                accept = False
+                for c in charset:
+                    if spl_match.group(2).startswith(c):
+                        accept = True
+                        
+                if accept:
+                    i.user.add_alias(spl_match.group(1), spl_match.group(2))
+                    b.l_say('Alias %s added.' % (PURPLE+spl_match.group(1)+WHITE), i, 0)
+                    return True
+                else:
+                    b.l_say('Alias rejected, command must start with %s or %s' \
+                            % (PURPLE+b.config.char+WHITE, PURPLE+b.config.prchar+WHITE), i, 0)
+                    return True
+            b.l_say('Usage %s.alias new "[alias]" "[command]"' % GREY, i, 0)
+            return True
+            
+        elif i.args[0].lower() == 'rem' or i.args[0].lower() == 'remove':
+            alias = ' '.join(i.args[1:])
+            if i.user.rem_alias(alias):
+                b.l_say('Alias successfully removed', i, 0)
+            else:
+                b.l_say('Alias not found', i, 0)
+            return True
+    except:
+        pass
+    b.l_say('Usage %s.alias [new|remove]' % GREY, i, 0)
+    return True
+    

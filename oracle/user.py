@@ -18,6 +18,27 @@ class User:
         self.rank = self.data['rank']
         self.points = self.data['points']
         self.commands = self.data['commands']
+        try:
+            self.aliases = self.data['aliases']
+        except:
+            self.aliases = {}
+            
+    def add_alias(self, alias, command):
+        self.aliases[alias] = command
+        return True
+        
+    def get_alias(self, alias):
+        return self.aliases.get(alias)
+        
+    def get_alias_list(self):
+        return self.aliases
+        
+    def rem_alias(self, alias):
+        try:
+            del self.aliases[alias]
+            return True
+        except KeyError:
+            return False
         
     def get_rank(self):
         return self.rank
@@ -58,6 +79,16 @@ class User:
     def add_points(self, am):
         self.points += am
         return self.points
+        
+    def has_attribute(self, attr):
+        if hasattr(self, attr):
+            return True
+        return False
+            
+    def add_attribute(self, attr, value):
+        setattr(self, attr, value)
+        self.data[attr] = value
+        return True
             
     def create_file(self):
         print 'Creating user file for %s...' % self.true_name

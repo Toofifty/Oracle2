@@ -165,13 +165,19 @@ class Oracle(irc.IRC):
                     message = message[2:]
             except IndexError:
                 pass
+        
+        user = self.try_create_user(nick)
+        user.update_seen()
+        
+        for alias in user.get_alias_list():
+            if message[0] == alias:
+                message = []
+                message = user.get_alias(alias).split(' ')
+                print 'Alias recieved, "%s" to %s' % (alias, message)
                 
         input = Input(nick, channel, message)
         
         if bot is not '': input.ingame(bot)
-        
-        user = self.try_create_user(nick)
-        user.update_seen()
         
         input.set_user(user)
         

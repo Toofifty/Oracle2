@@ -1,5 +1,5 @@
 """
-Oracle 2.0 IRC Bot
+Oracle 2.0 IRC b
 admin.py plugin module
 
 http://toofifty.me/oracle
@@ -7,94 +7,95 @@ http://toofifty.me/oracle
 
 import sys, os, subprocess
 import traceback, time
+from format import GREY, WHITE, PURPLE
 
-def _init(bot):
+def _init(b):
     print '\t%s loaded' % __name__
     
-def reload(l, bot, input):
+def reload(l, b, i):
     """
     !d Reload all or specific modules (separated by a space)
     !a <modules...>
     !r developer
     """
-    if bot.reload_modules(input):
-        bot.l_say('Module(s) reloaded', input, 0)
+    if b.reload_modules(i):
+        b.l_say('Module(s) reloaded', i, 0)
         return True
     return False
     
-def modules(l, bot, input):
+def modules(l, b, i):
     """
     !d Get all loaded modules
     !r developer
     """
     for m in l.get_modules_list():
-        bot.l_say(m.capitalize(), input, 0)
+        b.l_say(m.capitalize(), i, 0)
     return True
 
-def load(l, bot, input):
+def load(l, b, i):
     """
     !d Load a module into Oracle
     !a [module]
     !r developer
     """
-    fl = l.load_module(input.args[0], bot)
+    fl = l.load_module(i.args[0], b)
     
     if fl:
         b.l_say('Module loaded.', i, 0)
     return fl
 
-def close(l, bot, input):
+def close(l, b, i):
     """
     !d Close Oracle
     !a <message...>
     !r administrator
     """
-    if input.args is None:
-        bot.l_say('Goodbye!', input, 3)
+    if i.args is None:
+        b.l_say('Goodbye!', i, 3)
     else:
-        bot.say(' '.join(input.args).capitalize(), channel='all')
-    bot.exit()
+        b.say(' '.join(i.args).capitalize(), channel='all')
+    b.exit()
     sys.exit()
     
-def fpart(l, bot, input):
+def fpart(l, b, i):
     """
     !d Fake a user part event
     !a <user>
     !r developer
     """
-    if input.args is None:
-        name = input.nick
+    if i.args is None:
+        name = i.nick
     else:
-        name = input.args[0]
-    bot.user_part_event(name, input.channel)
-    bot.l_say('Faked user part for %s' % name, input, 0)
+        name = i.args[0]
+    b.user_part_event(name, i.channel)
+    b.l_say('Faked user part for %s' % (PURPLE+name), i, 0)
     return True
 
-def fjoin(l, bot, input):
+def fjoin(l, b, i):
     """
     !d Fake a user join event
     !a <user>
     !r developer
     """
-    if input.args is None:
-        name = input.nick
+    if i.args is None:
+        name = i.nick
     else:
-        name = input.args[0]
-    bot.user_join_event(name, input.channel)
-    bot.l_say('Faked user join for %s' % name, input, 0)
+        name = i.args[0]
+    b.user_join_event(name, i.channel)
+    b.l_say('Faked user join for %s' % (PURPLE+name), i, 0)
     return True
 
-def restart(l, bot, input):
+def restart(l, b, i):
     """
     !d Restart Oracle
     !a <message...>
     !r administrator
     """
-    if input.args is None:
-        bot.l_say('I\'ll be back in a jiffy!', input, 3)
+    if i.args is None:
+        b.l_say('I\'ll be back in a jiffy!', i, 3)
     else:
-        boy.say(' '.join(input.args).capitalize(), channel='all')
-    bot.exit()
+        boy.say(' '.join(i.args).capitalize(), channel='all')
+    b.exit()
     print '\n' * 5
     
     args = sys.argv[:]
@@ -103,50 +104,50 @@ def restart(l, bot, input):
         args = ['"%s"' % arg for arg in args]
     os.execv(sys.executable, args)
     
-def say(l, bot, input):
+def say(l, b, i):
     """
     !d Instruct Oracle to repeat a word or phrase
     !a [message...]
     !r administrator
     """
     try:
-        bot.l_say(' '.join(input.args), input)
+        b.l_say(' '.join(i.args), i)
         return True
     except TypeError:
         return False
 
-def exe(l, bot, input):
+def exe(l, b, i):
     """
     !d Execute some (Python) code and print to IRC
     !a [code...]
     !r developer
     """
     try:
-        exec ' '.join(input.args)
+        exec ' '.join(i.args)
     except Exception, e:
-        bot.l_say(e, input, 0)
+        b.l_say(e, i, 0)
         return False
     return True
     
-def raw(l, bot, input):
+def raw(l, b, i):
     """
     !d Send a raw message to the IRC server
     !a [message...]
     !r developer
     """
-    if input.args is not None:
-        return bot.send_('%s\r\n' % ' '.join(input.args))
+    if i.args is not None:
+        return b.send_('%s\r\n' % ' '.join(i.args))
     return False
 
-def whois(l, bot, input):
+def whois(l, b, i):
     """
     !d Send a WHOIS message to the IRC server
     !a <nick>
     !r administrator
     """
-    if input.args is None:
-        return bot.whois(input.nick)
-    return bot.whois(' '.join(input.args))
+    if i.args is None:
+        return b.whois(i.nick)
+    return b.whois(' '.join(i.args))
     
 def doc(l, b, i):
     """
@@ -196,7 +197,7 @@ def setrank(l, b, i):
              'moderator',
              'user']
     if i.args is None or len(i.args) < 2:
-        b.l_say('Usage: .setrank [user] [developer|administrator|moderator|user]', i, 0)
+        b.l_say('Usage: %s.setrank [user] [developer|administrator|moderator|user]' % GREY, i, 0)
         return True
     if i.args[1] in ranks:
         try:
@@ -215,16 +216,16 @@ def makeadmin(l, b, i):
     b.l_say('You are now administrator', i, 0)
     return True
     
-def open(l, bot, input):
+def open(l, b, i):
     """
-    !d Open a specific directory, the the path of the bot
+    !d Open a specific directory, the the path of the b
     !a [path]
     !r developer
     """
-    if input.args is None: path = os.getcwd()
-    else: path = '\\'.join(input.args)
+    if i.args is None: path = os.getcwd()
+    else: path = '\\'.join(i.args)
     try:
-        bot.l_say('Opening %s' % path, input, 0)
+        b.l_say('Opening %s' % path, i, 0)
         subprocess.Popen(r'explorer /open, "%s"' % path)
     except Exception, e:
         tracepack.print_exc()
