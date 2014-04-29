@@ -10,7 +10,7 @@ import string, sys, traceback, os
 from optparse import OptionParser, OptionGroup
 import irc, plugins, user
 
-VERSION = '2.0.1a'
+VERSION = '2.0.5a'
 
 class Oracle(irc.IRC):
     """Main Bot Class
@@ -18,19 +18,20 @@ class Oracle(irc.IRC):
     Decodes messages and performs certain events
     depending on their nature.
     """
+    
     def __init__(self, config):
         """Initializes the bot with the IRC
         socket class. Also assigns it a plugin
         loader, and tries to connect to the
         server.
-        
-        returns None
         """
+        
         irc.IRC.__init__(self, config)
         self.config = config
         self.plugins = plugins.Loader(config, self)
         self.users = {}
         self.init_connect()
+        
         
     def process(self, w):
         """Processes a raw message from the server.
@@ -50,8 +51,9 @@ class Oracle(irc.IRC):
         And sends the messages to the respective
         functions.
         
-        returns Boolean        
+        @returns Boolean        
         """
+        
         if self.config.verbose:
             print ' '.join(w)
             
@@ -131,6 +133,7 @@ class Oracle(irc.IRC):
                 return self.chat_event(nick, w[2], w[3:])
             else:
                 return self.message_event(nick, ' '.join(w[3:]))
+                
             
     def chat_event(self, nick, channel, message):
         """Chat event called by 'PRIVMSG channel'.
@@ -138,7 +141,16 @@ class Oracle(irc.IRC):
         sends it to the command processor at
         self.plugins
         
-        returns Boolean
+        Also checks whether the message was sent
+        by one of the MC server bots, and responds
+        appropriately.
+        
+        ~Also~ performs alias checking on the message
+        
+        !ALSO! parses any youtube links it sees into
+        the .parseyoutube command.
+        
+        @returns Boolean -> message is a command
         """
         
         def get_level(char):
@@ -146,6 +158,7 @@ class Oracle(irc.IRC):
             
             returns int -> 0-2, 0 being most private
             """
+            
             if char == self.config.char:
                 return 1
             if char == self.config.prchar:
@@ -157,33 +170,58 @@ class Oracle(irc.IRC):
         if nick == 'RapidSurvival' or nick == 'RapidCreative':
             try:
                 bot = nick
+                
+                # Check if the message is player chat, and
+                # get new nick and message
                 if message[0].startswith('<'):
-                    nick = message[0].replace('<','').replace('>','')
+                    nick = message[0].replace('<', '').replace('>', '')
                     message = message[1:]
+                    
+                # Check if the message is player private message,
+                # and get new nick and message
                 elif message[1] is 'whispers':
                     nick = message[0]
                     message = message[2:]
+                    
             except IndexError:
+                # Message might contain other things (death messages, etc)
+                # So we won't throw a fuss if it's not in the format
+                # we want.
                 pass
         
+        # Get a user from the nick. This is important for
+        # later on.
         user = self.try_create_user(nick)
+        # Update the 'seen' field every message
         user.update_seen()
         
+        # Check through the aliases within the user's
+        # file, and see if any match
         for alias in user.get_alias_list():
-            if message[0] == alias:
+            if ' '.join(message).startswith(alias):
+                # Set message to alias result
                 message = []
                 message = user.get_alias(alias).split(' ')
                 print 'Alias recieved, "%s" to %s' % (alias, message)
                 
+        # Create a new Input instance, seems easier
+        # than a dictionary to work with.
         input = Input(nick, channel, message)
         
+        # If 'bot' has been set to either of the bots,
+        # set it in the Input instance.
         if bot is not '': input.ingame(bot)
         
+        # Set the user
         input.set_user(user)
         
+        # Print what's happening
         print '<%s(%s)>' % (nick, channel), ' '.join(message)            
         
+        # Parse something that looks like a youtube link
         if 'https://www.youtube.com/watch?v' in ' '.join(message):
+            # Fake a command, since the logic is within the
+            # YouTube module.
             input.set_command('parseyoutube')
             input.set_level(1)
             input.args = []
@@ -191,136 +229,183 @@ class Oracle(irc.IRC):
             for word in message:
                 if 'https://www.youtube.com/' in word:
                     input.args.append(word)                    
-            self.plugins.process_command(self, input)
+            return self.plugins.process_command(self, input)
         
+        # Temporary, since no ranks are implemented yet.
         if nick != 'Toofifty' and nick != 'Oracle' and nick != 'Manyman':
             return False
         
         charset = (self.config.char, self.config.prchar, self.config.puchar)
         
+        # Check if the message is actually a command.
         for c in charset:
             if message[0].startswith(c):
+                # Throw new found command to the plugins.py module.
                 input.set_command(message[0].split(c, 1)[1])
                 input.set_level(get_level(c))
-                self.plugins.process_command(self, input)
-        else:
-            return True
+                return self.plugins.process_command(self, input)
+        return False
+        
     
     def message_event(self, nick, message):
         """Message event called by 'PRIVMSG self'."""
+        
         print '<%s(NOTICE)>' % (nick), ' '.join(message)
+        
     
     def user_join_event(self, nick, channel):
         """User join event called by 'JOIN user'."""
+        
         self.whois(nick)
+        
     
     def user_part_event(self, nick, channel):
         """User part event called by 'PART user'."""
+        
         if self.users.has_key(nick):
             self.users[nick].part()
+            
             
     def user_nick_event(self, nick, new_nick):
         """User nick change event called by 'NICK user'."""
         
+        
     def bot_join_event(self, chan):
         """Bot join event called by 'JOIN self'."""
+        
         self.say(("Never fear, %s is here!" % self.config.nick), chan)
         return
+        
     
     def bot_invite_event(self, nick, chan):
         """Invite event called by 'INVITE self'."""
+        
         print nick, 'has invited me to', chan
         self.join_channel(chan)
         return
+        
     
     def exit(self):
         """Bot exit event called by .restart and .close
-        Ensures saving of user files among other things
-        (to be added later)
+        Ensures saving of user files among other things.
         """
+        
         for u in self.users:
             self.users[u].part()
         self.quit()
+        
     
     def reload_modules(self, input):
         """Reload modules within self.plugins.
         Used when called by the command '.reload'
         
-        returns Boolean
+        @returns Boolean -> module reloaded
         """
+        
         print 'Reloading modules...'
+        
+        # Reload all if we don't have any arguments.
+        # Unfortunately, does not reload the main
+        # classes.
         if input.args is None:
             return self.plugins.reload_all(self, input)
         
+        # Go through modules given
         for m_s in input.args:
             try:
                 m = self.plugins.get_module_from_string(m_s)
             except KeyError:
+                # Module not found
                 self.l_say('%s is not a valid module, try modules.%s'\
                             % (m_s, m_s), input, 0)
                 return False
             
+            # Reload it, if it was found
             return self.plugins.reload_module(m, self, input)
+            
+        # This is fine, errors are handled nicely.
         return True
+        
     
     def get_char(self):
-        """returns string -> self.char
+        """@returns string -> self.char
         """
+        
         return self.char
+        
     
     def open_user(self, name):
         """Opens a new user class - in order
         to not need upper-level imports in the
         modules.
         
-        returns user.User()
+        @returns user.User()
         """
+        
         return user.User(name)
+        
     
     def get_user(self, nick):
         """Tries to grab a user from self.users
         if none are found does not create a new file
         
-        returns user.User()
+        @returns user.User() or False -> user not found
         """
-        PATH = os.path.join('..', 'files', 'users')
+        
+        p = os.path.join('..', 'files', 'users')
         
         try:
+            # Check if in current loaded users
             return self.users[nick]
+            
         except KeyError:
-            if nick + '.json' in os.listdir(PATH):
+            # Check if user has a file
+            if nick + '.json' in os.listdir(p):
                 self.users[nick] = self.open_user(nick)
                 return self.users[nick]
+                
             else:
                 return False
+                
         
     def try_create_user(self, nick):
-        """Tries to grab a user from self.users
+        """Tries to grab a user from self.get_user()
         if none are found, creates a new one
         
-        returns user.User()
+        @returns user.User()
         """
-        try:
-            return self.users[nick]
-        except KeyError:
+        
+        user = self.get_user()
+        
+        # If get_user couldn't find them, create a new user
+        if not user:
             self.users[nick] = self.open_user(nick)
             return self.users[nick]
-        
+            
+        # If they were found by get_user
+        else:
+            return user    
+            
     
     def get_version(self):
         """Version getter
         
-        returns String -> VERSION
+        @returns String -> VERSION
         """
+        
         return VERSION
+        
+        
     
 class Input(object):
     """Input class
     Bundles input information into an object to
     be sent around through functions and commands.
     """
+    
     def __init__(self, nick, channel, message):
         """Initialize a new set of input"""
+        
         self.nick = nick
         self.channel = channel
         self.command = None
@@ -333,22 +418,41 @@ class Input(object):
         self.game = ''
         
     def ingame(self, bot):
+        """Set the bot name that sent the message
+        
+        @returns String -> name set to
+        """
+        
         self.game = bot
+        return self.game
         
     def set_level(self, level):
-        """Set the privacy level of the input"""
+        """Set the privacy level of the input
+        
+        @returns String -> level set to
+        """
+        
         self.level = level
         return self.level
         
     def set_command(self, cmd):
-        """Set the command of the input"""
+        """Set the command of the input
+        
+        @returns String -> command set to
+        """
+        
         self.command = cmd
         return self.command
     
     def set_user(self, user):
-        """Set the user class of the input"""
+        """Set the user class of the input
+        
+        @returns user.User() -> user set to
+        """
         self.user = user
         return self.user
+        
+        
         
 def parse_options():
     """Parse options from the console using
@@ -421,6 +525,7 @@ def parse_options():
     p.add_option_group(i)
     p.add_option_group(b)
     return p.parse_args()
+    
         
 def main():
     """Main Bot Loop

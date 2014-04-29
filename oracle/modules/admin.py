@@ -1,5 +1,5 @@
 """
-Oracle 2.0 IRC b
+Oracle 2.0 IRC Bot
 admin.py plugin module
 
 http://toofifty.me/oracle
@@ -111,7 +111,8 @@ def say(l, b, i):
     !r administrator
     """
     try:
-        b.l_say(' '.join(i.args), i)
+        print 'Saying the phrase:', ' '.join(i.args)
+        b.l_say(' '.join(i.args), i, 1)
         return True
     except TypeError:
         return False
