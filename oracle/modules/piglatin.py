@@ -37,6 +37,7 @@ def opish(l, b, i):
     if i.args[0] == '-':
         pass
     else:
+        #Adds -op after every consonant
         out = ''
         #consonant_pattern = re.compile(r'
     b.l_say('Sorry! This has not been implemented yet.', i, 0)
