@@ -3,7 +3,7 @@
 Oracle 2.0 IRC Bot
 bot.py
 
-http://toofifty.me/oracle
+http://oracle.toofifty.me/
 """
 
 import string, sys, traceback, os
@@ -166,6 +166,8 @@ class Oracle(irc.IRC):
             if char == self.config.puchar:
                 return 2
         
+        self.plugins.event(self, 'chat', (nick, channel, message))
+        
         bot = ''
         if nick == 'RapidSurvival' or nick == 'RapidCreative':
             try:
@@ -243,6 +245,7 @@ class Oracle(irc.IRC):
                 # Throw new found command to the plugins.py module.
                 input.set_command(message[0].split(c, 1)[1])
                 input.set_level(get_level(c))
+                self.plugins.event(self, 'command', (input))
                 return self.plugins.process_command(self, input)
         return False
         
@@ -250,18 +253,20 @@ class Oracle(irc.IRC):
     def message_event(self, nick, message):
         """Message event called by 'PRIVMSG self'."""
         
-        print '<%s(NOTICE)>' % (nick), ' '.join(message)
+        self.plugins.event(self, 'message', (nick, message))
         
     
     def user_join_event(self, nick, channel):
         """User join event called by 'JOIN user'."""
         
+        self.plugins.event(self, 'user_join', (nick, channel))
         self.whois(nick)
         
     
     def user_part_event(self, nick, channel):
         """User part event called by 'PART user'."""
         
+        self.plugins.event(self, 'user_part', (nick, channel))
         if self.users.has_key(nick):
             self.users[nick].part()
             
@@ -269,20 +274,20 @@ class Oracle(irc.IRC):
     def user_nick_event(self, nick, new_nick):
         """User nick change event called by 'NICK user'."""
         
+        self.plugins.event(self, 'user_nick', (nick, new_nick))
         
-    def bot_join_event(self, chan):
+    def bot_join_event(self, channel):
         """Bot join event called by 'JOIN self'."""
         
-        self.say(("Never fear, %s is here!" % self.config.nick), chan)
-        return
+        self.plugins.event(self, 'bot_join', (channel))
         
     
-    def bot_invite_event(self, nick, chan):
+    def bot_invite_event(self, nick, channel):
         """Invite event called by 'INVITE self'."""
         
-        print nick, 'has invited me to', chan
-        self.join_channel(chan)
-        return
+        self.plugins.event(self, 'bot_invite', (nick, channel))
+        print nick, 'has invited me to', channel
+        self.join_channel(channel)
         
     
     def exit(self):
@@ -458,6 +463,8 @@ def parse_options():
     """Parse options from the console using
     optparse's OptionParser
     """
+    
+    # Set groups
     p = OptionParser(version='Version: %s' % VERSION)
     d = OptionGroup(p, 'Debug Options')
     i = OptionGroup(p, 'IRC Options')

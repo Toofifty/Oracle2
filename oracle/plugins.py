@@ -147,6 +147,41 @@ class Loader:
                        % (module.__name__, e), input, 0)
             return False
         return True
+        
+        
+    def event(bot, type, args):
+        """Executes any methods that match the
+        type of event within the modules - allowing
+        modules to 'subscribe' to them.
+        
+        Functions triggered by events:
+            _chat (nick, channel, message)
+            _command (nick, input)
+            _message (nick, message)
+            _user_join (nick, channel)
+            _user_part (nick, channel)
+            _user_nick (nick, new_nick)
+            _bot_join (channel)
+            _bot_invite (nick, channel)
+            
+        Example:
+        
+        def _message(b, a):
+            nick, channel, message = a
+            print '%s from %s said: %s' % (nick, channel, message)
+        """
+        
+        function = '_' + type
+        
+        for m in self.modules:
+            if hasattr(m, function):
+                try:
+                    getattr(m, function)(bot, args)
+                except:
+                    traceback.print_exc()
+                    print 'Error encountered executing event', type,
+                    print 'for module:', self.get_module_from_string(m)
+    
     
 if __name__ == "__main__":
     print __doc__
