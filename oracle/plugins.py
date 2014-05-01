@@ -149,7 +149,7 @@ class Loader:
         return True
         
         
-    def event(bot, type, args):
+    def event(self, bot, type, args):
         """Executes any methods that match the
         type of event within the modules - allowing
         modules to 'subscribe' to them.
@@ -180,7 +180,7 @@ class Loader:
                 except:
                     traceback.print_exc()
                     print 'Error encountered executing event', type,
-                    print 'for module:', self.get_module_from_string(m)
+                    print 'for module:', m.__name__
     
     
 if __name__ == "__main__":

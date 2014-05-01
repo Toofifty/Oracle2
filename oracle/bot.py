@@ -215,10 +215,7 @@ class Oracle(irc.IRC):
         if bot is not '': input.ingame(bot)
         
         # Set the user
-        input.set_user(user)
-        
-        # Print what's happening
-        print '<%s(%s)>' % (nick, channel), ' '.join(message)            
+        input.set_user(user)           
         
         # Parse something that looks like a youtube link
         if 'https://www.youtube.com/watch?v' in ' '.join(message):
@@ -380,7 +377,7 @@ class Oracle(irc.IRC):
         @returns user.User()
         """
         
-        user = self.get_user()
+        user = self.get_user(nick)
         
         # If get_user couldn't find them, create a new user
         if not user:
