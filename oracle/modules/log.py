@@ -49,4 +49,5 @@ def _chat(bot, args):
         _log('receive', 'rapid chat', 
              message[0].replace('<', '').replace('>', ''),
              ' '.join(message[1:]))
-    _log('receive', 'chat', nick, ' '.join(message))
+    else:
+        _log('receive', 'chat', nick, ' '.join(message))
