@@ -30,6 +30,7 @@ def help(loader, bot, input):
         commands = {}
         list = []
         cmd = None
+        
         for line in doc:
             line = line.strip(' ')
             
@@ -37,10 +38,13 @@ def help(loader, bot, input):
                 cmd = line.replace('!c ', '').upper()
                 list.append(cmd)
                 commands[cmd] = {}
+                
             elif line.startswith('!d '):
                 commands[cmd]['desc'] = line.replace('!d ', '').capitalize()
+                
             elif line.startswith('!a '):
                 commands[cmd]['args'] = line.replace('!a ', '').upper()
+                
             elif line.startswith('!r '):
                 commands[cmd]['rank'] = line.replace('!r ', '').upper()
                 command_rank = commands[cmd]['rank']
@@ -48,21 +52,21 @@ def help(loader, bot, input):
                         
                     if command_rank == 'HIDDEN':
                         list.remove(cmd)
-                        return
+                        continue
                     if user_rank == 'developer':
-                        return
+                        continue
                     if command_rank == 'DEVELOPER':
                         list.remove(cmd)
                     if user_rank == 'administrator':
-                        return
+                        continue
                     if command_rank == 'ADMINISTRATOR':
                         list.remove(cmd)
                     if user_rank == 'moderator':
-                        return
+                        continue
                     if command_rank == 'MODERATOR':
                         list.remove(cmd)
                     if user_rank == 'user':
-                        return
+                        continue
                     if command_rank == 'USER':
                         list.remove(cmd)
                 except Exception, e:
@@ -85,13 +89,17 @@ def help(loader, bot, input):
         
         if doc is not None:
             if '!parent-command' in doc.split('\n')[0]:
+                print 'Formatting children...'
                 format_children(func, doc)
                 return
+                
             for line in doc.split('\n'):
                 if line.startswith('!d '):
                     desc = line.replace('!d ', '').capitalize()
+                    
                 elif line.startswith('!a '):
                     args = line.replace('!a ', '').upper()
+                    
                 elif line.startswith('!r '):
                     command_rank = line.replace('!r ', '').upper()
                     try:
@@ -124,17 +132,21 @@ def help(loader, bot, input):
         return_command(cmd, desc, command_rank)
     
     def return_command(cmd, desc, rank):
-        if cmd is None: cmd = ''
+        if cmd is None: return
         if desc is None: desc = ''
     
         if input.game == '':
-            str = '%s - %s' % (BASE + cmd.ljust(25), FILL + desc)
-        else:
+            cmd = cmd.ljust(25)
+            cmd = cmd.replace('<',BRKT+'<'+FILL).replace('>',BRKT+'>'+BASE)
+            cmd = cmd.replace('[',BRKT+'['+FILL).replace(']',BRKT+']'+BASE)
+            cmd = cmd.replace('...',BRKT+'...'+BASE)
+            
             str = '%s - %s' % (BASE + cmd, FILL + desc)
-                
-        str = str.replace('<',BRKT+'<'+FILL).replace('>',BRKT+'>'+BASE)
-        str = str.replace('[',BRKT+'['+FILL).replace(']',BRKT+']'+BASE)
-        str = str.replace('...',BRKT+'...'+BASE)
+        else:
+            cmd = cmd.replace('<',BRKT+'<'+FILL).replace('>',BRKT+'>'+BASE)
+            cmd = cmd.replace('[',BRKT+'['+FILL).replace(']',BRKT+']'+BASE)
+            cmd = cmd.replace('...',BRKT+'...'+BASE)
+            str = '%s - %s' % (BASE + cmd, FILL + desc)
     
         return bot.l_say(str, input, 0)
     
@@ -175,8 +187,6 @@ def help(loader, bot, input):
                     formatdoc(func)
                     return True
         
-        traceback.print_exc()
-        
         # Can't find the query anywhere, so we'll
         # print the default help message
         for line in inspect.getdoc(help).split('\n'):
@@ -184,6 +194,9 @@ def help(loader, bot, input):
         # Categories. Need an algorithm to get these
         bot.l_say(get_categories(input), input, 0)
         return True
+        
+    except:
+        traceback.print_exc()
     
 def version(l, b, i):
     """

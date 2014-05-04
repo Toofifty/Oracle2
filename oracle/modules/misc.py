@@ -1,5 +1,6 @@
 import random
 import re
+import socket
 from format import CYAN, GREY, PURPLE, WHITE
 
 def _init(bot):
@@ -117,4 +118,18 @@ def alias(l, b, i):
         pass
     b.l_say('Usage %s.alias [new|remove]' % GREY, i, 0)
     return True
+    
+def resolve(l, b, i):
+    """
+    !d Resolve a domain name/adress to an IP
+    !a [domain|address]
+    !r user
+    """
+    if i.args is None or len(i.args) < 1:
+        b.l_say('Usage %s.resolve [domain]' % GREY, i, 0)
+        return True
+    data = socket.gethostbyname_ex(i.args[0])
+    b.l_say('%s resolved to %s' % (i.args[0], str(data[2])), i, 0)
+    return True
+    
     

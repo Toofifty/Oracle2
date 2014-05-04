@@ -178,11 +178,13 @@ def getrank(l, b, i):
     !r administrator
     """
     if i.args is None:
-        b.l_say('You are rank %s.' % i.user.get_rank().upper(), i, 0)
+        rank = l.get_string_from_rank(i.user.get_rank()).upper()
+        b.l_say('You are rank %s.' % rank, i, 0)
     else:
         try:
             rank = b.get_user(i.args[0]).get_rank()
-            b.l_say('%s\'s rank is %s.' % (i.args[0], rank.upper()), i, 0)
+            str_rank = l.get_string_from_rank(rank).upper()
+            b.l_say('%s\'s rank is %s.' % (i.args[0], str_rank), i, 0)
         except Exception, e:
             b.l_say('No rank found for %s: %s' % (i.args[0], e), i, 0)
     return True
@@ -193,18 +195,41 @@ def setrank(l, b, i):
     !a [user] [rank]
     !r administrator
     """
-    ranks = ['developer',
+    ranks = [
+             'hidden',
+             'developer',
              'administrator',
              'moderator',
-             'user']
+             'user',
+             'none',
+            ]
+    numbers = [
+             '0', '1', '2',
+             '3', '4', '-1'
+             ]
     if i.args is None or len(i.args) < 2:
         b.l_say('Usage: %s.setrank [user] [developer|administrator|moderator|user]' % GREY, i, 0)
         return True
     if i.args[1] in ranks:
         try:
             user = b.get_user(i.args[0])
-            b.l_say('%s\'s rank set to %s.' % (i.args[0], user.set_rank(i.args[1]).upper()), i, 0)
+            
+            str_rank = i.args[1].upper()
+            user.set_rank(l.get_rank_from_string(i.args[1]))
+                
+            b.l_say('%s\'s rank set to %s.' % (i.args[0], str_rank), i, 0)
+            
         except Exception, e:
+            b.l_say('No user found for %s: %s' % (i.args[0], e), i, 0)
+    if i.args[1] in numbers:
+        try:
+            user = b.get_user(i.args[0])
+            rank = int(i.args[1])
+            user.set_rank(rank)
+            str_rank = l.get_string_from_rank(rank).upper()
+            b.l_say('%s\'s rank set to %s.' % (i.args[0], str_rank), i, 0)
+        
+        except:
             b.l_say('No user found for %s: %s' % (i.args[0], e), i, 0)
     return True
 
@@ -213,7 +238,7 @@ def makeadmin(l, b, i):
     !d Fallback command to make a yourself admin
     !r hidden
     """
-    i.user.set_rank('administrator')
+    i.user.set_rank(3)
     b.l_say('You are now administrator', i, 0)
     return True
     
@@ -231,6 +256,38 @@ def open(l, b, i):
     except Exception, e:
         tracepack.print_exc()
     return True
+    
+def ban(l, b, i):
+    """
+    !d Ban a user from all channels Oracle is in
+    !a [user]
+    !r moderator
+    """
+    if i.args is None:
+        b.l_say('Usage: %s.ban [user]' % GREY, i, 0)
+        return True
+    user = b.get_user(i.args[0])
+    if not user:
+        b.l_say('No user found under that name.', i, 0)
+        return True
+    user.set_rank(0)
+    b.l_say('%s successfully banned.' % user.get_name(), i, 0)
+    return True
+        
+    
+def kick(l, b, i):
+    """
+    !d Kick a user from all channels Oracle is in
+    !a [user] <reason>
+    !r moderator
+    """
+    if i.args is None:
+        b.l_say('Usage: %s.kick [user] <channels...>' % GREY, i, 0)
+        return True
+    b.kick(i.args[0])
+    b.l_say('%s kicked.' % i.args[0])
+    return True
+        
     
 if __name__ == '__main__':
     print __doc__

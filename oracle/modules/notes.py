@@ -105,7 +105,7 @@ def notes(l, b, i):
 def note(l, b, i):
     """
     !d Alias command for .notes
-    !a [new|edit|delete|get|search]
+    !a [args]
     !r user
     """
     return notes(l, b, i)

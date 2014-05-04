@@ -10,7 +10,7 @@ import string, sys, traceback, os
 from optparse import OptionParser, OptionGroup
 import irc, plugins, user
 
-VERSION = '2.0.5a'
+VERSION = '2.1.0a'
 
 class Oracle(irc.IRC):
     """Main Bot Class
@@ -97,6 +97,7 @@ class Oracle(irc.IRC):
         
         # WHOIS - 'User' :is logged in as
         if '330' in w[1]:
+            self.plugins.event(self, 'whois_330', (w[3], w[4]))
             try:
                 if not self.users.has_key(w[3]):
                     self.users[w[3]] = user.User(w[4])
@@ -104,6 +105,21 @@ class Oracle(irc.IRC):
             except:
                 traceback.print_exc()
             return True
+            
+        # WHOIS - 'realname' 'domain' * :realname
+        if '311' in w[1]:
+            self.plugins.event(self, 'whois_311', (w[3], w[4], w[5]))
+            return
+            
+        # WHOIS - :'channels...'
+        if '319' in w[1]:
+            w[4] = w[4].replace(':', '')
+            self.plugins.event(self, 'whois_319', (w[3], w[4:]))
+            return
+            
+        # WHOIS - 'idle_sec' 'signon_time' :second idle, signon time
+        if '317' in w[1]:
+            self.plugins.event(self, 'whois_317', (w[3], w[4], w[5]))
         
         #################################################
         # End of things that can be done without a nick #
@@ -283,7 +299,6 @@ class Oracle(irc.IRC):
         """Invite event called by 'INVITE self'."""
         
         self.plugins.event(self, 'bot_invite', (nick, channel))
-        print nick, 'has invited me to', channel
         self.join_channel(channel)
         
     

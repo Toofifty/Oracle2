@@ -54,7 +54,6 @@ class Loader:
         
         returns Boolean
         """
-        print 'Command received!'
         
         if input.command.startswith('_'):
             return False
@@ -71,11 +70,44 @@ class Loader:
         return True
     
     def try_command(self, bot, input, m):
+        def fail():
+            bot.l_say('Sorry, you do not have the required permissions for'
+                      ' this command.', input, 0)
+            print 'command failed'
+            return
+    
         try:
+            doc = getattr(m, input.command).__doc__
+            
+            # Get ranks for sub-commands
+            if '!parent-command' in doc:
+                try:
+                    c_rank = doc.split('!c ' + input.args[0], 1)[1]\
+                             .split('!r ', 1)[1].split(' ', 1)[0].lower()
+                except:
+                    c_rank = 'user'
+            # Get ranks for regular commands
+            else:
+                if '!r' in doc:
+                    c_rank = doc.split('!r ', 1)[1].split(' ', 1)[0].lower()
+                else: c_rank = 'user'
+                        
+            c_rank = c_rank.replace('\n','')
+                
+            # Get user rank (int)
+            u_rank = input.user.get_rank()
+            
+            # Get command rank as int
+            c_rank = self.get_rank_from_string(c_rank)
+
+            if not u_rank >= c_rank:
+                return fail()
+            
             # If return False
             if not getattr(m, input.command)(self, bot, input):
                 bot.l_say('Command returned false.', input, 0)
                 return
+                
         except Exception, e:
             traceback.print_exc()
             bot.l_say('Something went wrong with that command.', input, 0)
@@ -148,6 +180,35 @@ class Loader:
             return False
         return True
         
+    
+    def get_rank_from_string(self, string):
+        string = string.lower()
+        if string == 'hidden':
+            return -1
+        if string == 'developer':
+            return 4
+        if string == 'administrator':
+            return 3
+        if string == 'moderator':
+            return 2
+        if string == 'user':
+            return 1
+        return 0
+        
+        
+    def get_string_from_rank(self, rank):
+        if rank == 1:
+            return 'user'
+        if rank == 2:
+            return 'moderator'
+        if rank == 3:
+            return 'administrator'
+        if rank == 4:
+            return 'developer'
+        if rank == -1:
+            return 'hidden'
+        return 'none'
+        
         
     def event(self, bot, type, args):
         """Executes any methods that match the
@@ -156,13 +217,17 @@ class Loader:
         
         Functions triggered by events:
             _chat (nick, channel, message)
-            _command (nick, input)
+            _command (input)
             _message (nick, message)
             _user_join (nick, channel)
             _user_part (nick, channel)
             _user_nick (nick, new_nick)
             _bot_join (channel)
             _bot_invite (nick, channel)
+            _whois_311 (nick, realname, domain)
+            _whois_319 (nick, channels)
+            _whois_317 (nick, idle_seconds, signon_time)
+            _whois_330 (nick, user)
             
         Example:
         
