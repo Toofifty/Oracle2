@@ -1,7 +1,15 @@
 import random
 import re
 import socket
+from math import *
+from sympy import *
+from sympy.parsing.sympy_parser import parse_expr, eval_expr
 from format import CYAN, GREY, PURPLE, WHITE
+
+try:
+    from sympy import *
+except:
+    print 'SymPy not found; ignoring'
 
 def _init(bot):
     print '\t%s loaded' % __name__
@@ -76,47 +84,97 @@ def overworld(l, b, i):
     return True   
     
 def alias(l, b, i):
+    """!parent-command
+    !c new
+        !d Define a custom command to any word/phrase
+        !a "[alias]" "[command]"
+        !r user
+    !c remove
+        !d Remove an alias
+        !a "[alias]"
+        !r user
+    !c list
+        !d List your current aliases
+        !r user
+    !c globaladd
+        !d Add a global alias
+        !r administrator
+    !c globalrem
+        !d Remove a global alias
+        !r administrator
+    !c globallist
+        !d List global aliases
+        !r user
     """
-    !d Define a custom command to any word/phrase
-    !a [new|remove] "[alias]" "[command+args]"
-    !r user
-    """
+    def new(l, b, i):
+        splitter = re.compile(r'"(.*?)" "(.*?)"')
+        message = ' '.join(i.args[1:])
+        spl_match = splitter.match(message)
+        if spl_match is not None:
+            accept = False
+            for c in charset:
+                if spl_match.group(2).startswith(c):
+                    accept = True
+                    
+            if accept:
+                i.user.add_alias(spl_match.group(1), spl_match.group(2))
+                b.l_say('Alias %s added.' % (PURPLE+spl_match.group(1)+WHITE), i, 0)
+                return True
+            else:
+                b.l_say('Alias rejected, command must start with %s or %s' \
+                        % (PURPLE+b.config.char+WHITE, PURPLE+b.config.prchar+WHITE), i, 0)
+                return True
+        b.l_say('Usage %s.alias new "[alias]" "[command]"' % GREY, i, 0)
+        return True
+        
+    def remove(l, b, i):
+        alias = ' '.join(i.args[1:])
+        if i.user.rem_alias(alias):
+            b.l_say('Alias successfully removed', i, 0)
+        else:
+            b.l_say('Alias not found', i, 0)
+        return True
+        
+    def list(l, b, i):
+        for k, v in i.user.get_alias_list().iteritems():
+            b.l_say('"%s" -> "%s"' % (CYAN+k+WHITE, GREY+v+WHITE), i, 0)
+        return True
+    
     charset = (b.config.char, b.config.prchar, b.config.puchar)
     
     if i.user.get_alias_list() is []:
         i.user.add_attribute('aliases', [])
+    
+    #====================================================================#    
     try:
-        if i.args[0].lower() == 'new':
-            splitter = re.compile(r'"(.*?)" "(.*?)"')
-            message = ' '.join(i.args[1:])
-            spl_match = splitter.match(message)
-            if spl_match is not None:
-                accept = False
-                for c in charset:
-                    if spl_match.group(2).startswith(c):
-                        accept = True
-                        
-                if accept:
-                    i.user.add_alias(spl_match.group(1), spl_match.group(2))
-                    b.l_say('Alias %s added.' % (PURPLE+spl_match.group(1)+WHITE), i, 0)
-                    return True
-                else:
-                    b.l_say('Alias rejected, command must start with %s or %s' \
-                            % (PURPLE+b.config.char+WHITE, PURPLE+b.config.prchar+WHITE), i, 0)
-                    return True
-            b.l_say('Usage %s.alias new "[alias]" "[command]"' % GREY, i, 0)
+        exec ('%s(l, b, i)' % i.args[0]) in globals(), locals()
+    except Exception, e:
+        b.l_say('Usage: %s.alias [new|list|remove]' % CYAN, i, 0)
+    return True
+    #====================================================================#
+    
+def calc(l, b, i):
+    """
+    !d Perform high-level maths
+    !a [equation...]
+    !r user
+    """
+    if i.args is not None:
+        try:
+            sm = ' '.join(i.args)
+            exp = parse_expr(sm)
+            try:
+                evald = exp.evalf()
+                b.l_say('%s%s = %s%s' % (PURPLE, sm, GREY, str(evald)), i)
+            except:
+                b.l_say('%s%s = %s%s' % (PURPLE, sm, GREY, str(exp)), i)
             return True
             
-        elif i.args[0].lower() == 'rem' or i.args[0].lower() == 'remove':
-            alias = ' '.join(i.args[1:])
-            if i.user.rem_alias(alias):
-                b.l_say('Alias successfully removed', i, 0)
-            else:
-                b.l_say('Alias not found', i, 0)
+        except Exception, e:
+            b.l_say('Syntax error: %s' % GREY+str(e), i)
             return True
-    except:
-        pass
-    b.l_say('Usage %s.alias [new|remove]' % GREY, i, 0)
+            
+    b.l_say('Usage: %s.calc [equation...]' % GREY, i, 0)
     return True
     
 def resolve(l, b, i):
@@ -132,4 +190,16 @@ def resolve(l, b, i):
     b.l_say('%s resolved to %s' % (i.args[0], str(data[2])), i, 0)
     return True
     
+def _chat(bot, args):
+    nick, channel, message = args
     
+    # I'll use this to help pick up common errors
+    
+    if message[0] == '.math':
+        bot.msg(nick, 'Did you mean %s.calc%s?' % (PURPLE, WHITE))
+    
+    if message[0] == '?help':
+        bot.msg(nick, 'Oracle has been updated! Commands now start with a %s.'
+                      % PURPLE)
+        bot.msg(nick, 'Try using %s.help' % PURPLE)
+        

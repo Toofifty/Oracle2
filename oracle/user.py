@@ -21,6 +21,7 @@ class User:
             self.aliases = self.data['aliases']
         except:
             self.aliases = {}
+            self.data['aliases'] = {}
             
     def add_alias(self, alias, command):
         self.aliases[alias] = command
@@ -92,7 +93,7 @@ class User:
     def create_file(self):
         with open(self.path, 'w') as f:
             f.write('{"seen": 0, "last_nick": "%s", "rank": 1, "points": 0, '
-                    '"commands": 0}' % self.nick)
+                    '"commands": 0, "aliases": {}}' % self.nick)
             
     def get_user_data(self):
         udata = {}

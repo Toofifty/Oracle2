@@ -97,7 +97,6 @@ def notes(l, b, i):
     try:
         exec ('%s(l, b, i)' % i.args[0]) in globals(), locals()
     except Exception, e:
-        traceback.print_exc()
         b.l_say('Usage: %s.notes [new|list|search|textsearch|delete|edit|get]' % CYAN, i, 0)
     return True
     #====================================================================#

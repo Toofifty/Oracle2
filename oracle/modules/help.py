@@ -7,6 +7,7 @@ http://toofifty.me/oracle
 
 import types, inspect
 import traceback
+import math
 
 from format import WHITE, CYAN, GREY, PURPLE
 
@@ -17,124 +18,110 @@ def _init(bot):
 # <module>.<command>(plugins.Loader(), bot.Oracle(), bot.Input())
 # In all other plugins, these are abbreviated to l, b, i
 def help(loader, bot, input):
-    """Welcome to the Oracle guide! Commands are categorised for neatness.
-    Use .help [category] to list those commands. Categories:"""
+    """Print the command usage and other
+    help to the user
+    """
     
     BASE = CYAN
     BRKT = PURPLE
     FILL = GREY
     
-    def format_children(func, doc):
-        user_rank = input.user.get_rank()
+    help_dict = {}
+
+    def s(str):
+        return bot.l_say(str, input, 0)
+    
+    def append_cmd(cmd, desc):
+        help_dict[cmd] = desc
+        
+    def parse_child(function, doc):
+        u_rank = input.user.get_rank()
+        # First line is '!parent-command'
         doc = doc.split('\n')[1:]
-        commands = {}
-        list = []
-        cmd = None
+        
+        c = d = a = r = ''
         
         for line in doc:
             line = line.strip(' ')
             
+            # Command
             if line.startswith('!c '):
-                cmd = line.replace('!c ', '').upper()
-                list.append(cmd)
-                commands[cmd] = {}
+                c = line.replace('!c ', '').upper()
                 
+            # Description
             elif line.startswith('!d '):
-                commands[cmd]['desc'] = line.replace('!d ', '').capitalize()
+                d = line.replace('!d ', '').capitalize()
                 
+            # Arguments
             elif line.startswith('!a '):
-                commands[cmd]['args'] = line.replace('!a ', '').upper()
+                a = line.replace('!a ', '').upper()
                 
+            # Rank
+            # ALL child commands NEED a rank to
+            # be processed.
             elif line.startswith('!r '):
-                commands[cmd]['rank'] = line.replace('!r ', '').upper()
-                command_rank = commands[cmd]['rank']
-                try:
-                        
-                    if command_rank == 'HIDDEN':
-                        list.remove(cmd)
-                        continue
-                    if user_rank == 'developer':
-                        continue
-                    if command_rank == 'DEVELOPER':
-                        list.remove(cmd)
-                    if user_rank == 'administrator':
-                        continue
-                    if command_rank == 'ADMINISTRATOR':
-                        list.remove(cmd)
-                    if user_rank == 'moderator':
-                        continue
-                    if command_rank == 'MODERATOR':
-                        list.remove(cmd)
-                    if user_rank == 'user':
-                        continue
-                    if command_rank == 'USER':
-                        list.remove(cmd)
-                except Exception, e:
-                    traceback.print_exc()
+                str = line.replace('!r ', '')
+                r = loader.get_rank_from_string(str)
                 
-        for c in sorted(list):
-            if commands[c].has_key('args'):
-                cmd = '%s %s %s' % (func.__name__.upper(), c, commands[c]['args'])
-            else:
-                cmd = '%s %s' % (func.__name__.upper(), c)
+                # Don't add to help dict
+                if not u_rank >= r:
+                    continue
                 
-            return_command(cmd, commands[c]['desc'], commands[c]['rank'])
-    
-    def formatdoc(func):
-        user_rank = input.user.get_rank()
-        doc = inspect.getdoc(func)
-        command_rank = ''
-        args = rank = None
-        desc = doc
+                # Add them all together and append
+                cmd = func.__name__.upper()
+                cmd += ' ' + c + ' ' + a
+                
+                append_cmd(cmd.upper(), d)
+                
+                # Reset values
+                c = d = a = r = ''
+                continue
+
+    def parse_doc(function):
+        u_rank = input.user.get_rank()
+        doc = inspect.getdoc(function)
+        c_rank = 0
+        a = r = d = ''
         
         if doc is not None:
-            if '!parent-command' in doc.split('\n')[0]:
-                print 'Formatting children...'
-                format_children(func, doc)
+            if '!parent-command' in doc:
+                parse_child(function, doc)
                 return
                 
             for line in doc.split('\n'):
+                
+                # Description
                 if line.startswith('!d '):
-                    desc = line.replace('!d ', '').capitalize()
+                    d = line.replace('!d ', '').capitalize()
                     
+                # Command
                 elif line.startswith('!a '):
-                    args = line.replace('!a ', '').upper()
+                    a = line.replace('!a ', '').upper()
                     
+                # Rank
                 elif line.startswith('!r '):
-                    command_rank = line.replace('!r ', '').upper()
-                    try:
-                        if command_rank == 'HIDDEN':
-                            return
-                        if user_rank == 'developer':
-                            continue
-                        if command_rank == 'DEVELOPER':
-                            return
-                        if user_rank == 'administrator':
-                            continue
-                        if command_rank == 'ADMINISTRATOR':
-                            return
-                        if user_rank == 'moderator':
-                            continue
-                        if command_rank == 'MODERATOR':
-                            return
-                        if user_rank == 'user':
-                            continue
-                        if command_rank == 'USER':
-                            return
-                    except Exception, e:
-                        traceback.print_exc()                 
+                    str = line.replace('!r ', '')
+                    r = loader.get_rank_from_string(str)
+                    if not u_rank >= r:
+                        return
                     
-        if args is None:
-            cmd = func.__name__.upper()
-        else:
-            cmd = '%s %s' % (func.__name__.upper(), args)
-        
-        return_command(cmd, desc, command_rank)
-    
-    def return_command(cmd, desc, rank):
+            cmd = function.__name__.upper()
+            if a != '':
+                cmd += ' ' + a
+                
+            # Append
+            append_cmd(cmd, d)
+            
+    def print_line(cmd, desc):
+        # Ensure the command exists
+        # Description doesn't matter as much.
         if cmd is None: return
         if desc is None: desc = ''
-    
+
+        # Game has different kerning, so aligning
+        # the message wouldn't look right.
+        
+        # Not game
         if input.game == '':
             cmd = cmd.ljust(25)
             cmd = cmd.replace('<',BRKT+'<'+FILL).replace('>',BRKT+'>'+BASE)
@@ -142,28 +129,57 @@ def help(loader, bot, input):
             cmd = cmd.replace('...',BRKT+'...'+BASE)
             
             str = '%s - %s' % (BASE + cmd, FILL + desc)
+        # In game
         else:
             cmd = cmd.replace('<',BRKT+'<'+FILL).replace('>',BRKT+'>'+BASE)
             cmd = cmd.replace('[',BRKT+'['+FILL).replace(']',BRKT+']'+BASE)
             cmd = cmd.replace('...',BRKT+'...'+BASE)
+            
             str = '%s - %s' % (BASE + cmd, FILL + desc)
+
+        # Say the line to the user.
+        return s(str)
+            
+    def get_page_count():
+        return math.ceil(len(help_dict) / 10.0)
+            
+    def print_help(page):
+        max_page = get_page_count()
     
-        return bot.l_say(str, input, 0)
-    
-    def get_categories(input):
-        rank = input.user.get_rank()
-        if rank == 'developer':
-            return 'Emotes - Server - Personal - Other - Moderator - Admin - Dev'
-        elif rank == 'administrator':
-            return 'Emotes - Server - Personal - Other - Moderator - Admin'
-        elif rank == 'moderator':
-            return 'Emotes - Server - Personal - Other - Moderator'
-        elif rank == 'user':
-            return 'Emotes - Server - Personal - Other'
+        if page > max_page:
+            page = max_page
+        elif page < 1:
+            page = 1
+        
+        if input.game != '':
+            s('%s================ Page: %d/%d ================' % (PURPLE, page, max_page))
+            s('\t')
         else:
-            return 'Sorry! No categories found!'
+            s('%sPage %d/%d:' % (PURPLE, page, max_page))
+            
+        # 10 per page
+        start = 10 * page - 10
+        end = start + 10
+        count = 0
+        
+        # Iter through commands
+        for k, v in sorted(help_dict.iteritems()):
+            if count >= start and count < end:
+                print_line(k, v)
+            count += 1
+            
+        if input.game != '':
+            s('\t')
+            s('%s=========================================' % PURPLE)
+            
+        return True
     
     try:
+    
+        # User might ask for categories
+        if input.args is not None and input.args[0] == 'categories':
+            return categories(loader, bot, input)
+        
         # Grab the module from the laoded modules
         # This will throw a KeyError if no module is found,
         # and so it will print the default help message
@@ -173,30 +189,95 @@ def help(loader, bot, input):
                                    types.FunctionType)]
         for func in func_list:
             if not func.__name__.startswith('_'):
-                formatdoc(func)
+                parse_doc(func)
+                
+        page = 1
+        try:
+            page = int(input.args[1])
+        except IndexError:
+            pass
+            
+        print_help(page)
+            
         return True
     
     except (KeyError, TypeError):
+    
         # Try to see if the query is a function of its
         # own, and not a module
         if input.args is not None:
-            for m in loader.get_modules_list():
-                m = loader.get_module_from_string(m)
+        
+            # Let's assume the arg is bad
+            bad_arg = True
+        
+            for m in loader.get_modules():
+                
                 if hasattr(m, input.args[0]):
+                    bad_arg = False
                     func = getattr(m, input.args[0])
-                    formatdoc(func)
-                    return True
+                    parse_doc(func)
+                    
+            if not bad_arg:
+                print_help(1)
+                return True
+            
+            else:
+                s('%sUnknown argument: %s%s%s.\n\t' 
+                  % (WHITE, PURPLE, input.args[0], WHITE))
         
         # Can't find the query anywhere, so we'll
         # print the default help message
-        for line in inspect.getdoc(help).split('\n'):
-            bot.l_say(line, input, 0)
-        # Categories. Need an algorithm to get these
-        bot.l_say(get_categories(input), input, 0)
+        if input.game != '':
+            s('%s=========================================' % PURPLE)
+            s('\t')
+        s('Welcome to the Oracle help guide!')
+        s('\t')
+        s('%sHELP %susage:' % (PURPLE, WHITE))
+        s('\t%s.help' % CYAN)
+        s('\t%s.help oracle' % CYAN)
+        s('\t%s.help %s[%scategory%s] <%spage%s>' 
+          % (CYAN, WHITE, GREY, WHITE, GREY, WHITE))
+        s('\t%s.help %s[%scommand%s]' % (CYAN, WHITE, GREY, WHITE))
+        s('\t%s.help search %s[%sphrase...%s] <%spage%s>' 
+          % (CYAN, WHITE, GREY, WHITE, GREY, WHITE))
+        s('\t%s.help all %s<%spage%s>' % (CYAN, WHITE, GREY, WHITE))
+        s('\t')
+        s('Categories can be listed with')
+        s('the %s.categories%s command.' % (CYAN, WHITE))
+        if input.game != '':
+            s('\t')
+            s('%s=========================================' % PURPLE)
         return True
         
     except:
         traceback.print_exc()
+        
+def categories(l, b, i):
+    """
+    !d List loaded modules
+    !r user
+    """
+    restricted = [
+            'modules.admin',
+            'modules.format',
+            'modules.log',
+        ]
+    
+    message = []
+    for m in l.get_modules_list():
+        if not m in restricted: 
+            message.append(m.replace('modules.','').capitalize())
+    b.l_say('%sCategories: %s%s' % (CYAN, PURPLE, 
+                (WHITE+', '+PURPLE).join(message)), i, 0)
+    return True
+    
+
+def cats(l, b, i):
+    """
+    !d Alias for .categories
+    !r user
+    """
+    return categories(l, b, i)
     
 def version(l, b, i):
     """

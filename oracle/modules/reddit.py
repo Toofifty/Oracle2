@@ -5,8 +5,14 @@ reddit.py plugin module
 http://toofifty.me/oracle
 """
 
-import praw
+active = True
 
+try:
+    import praw
+except:
+    print 'PRAW library not found; reddit.py module will not work'
+    active = False
+    
 USER_AGENT = ('Oracle IRC link grabber script '
               'by /u/Toofifty')
 REDDIT = None
@@ -17,6 +23,8 @@ def _init(bot):
     print '\t%s loaded' % __name__
     
 def parsereddit(l, b, i):
+    if not active:
+        return b.l_say('Sorry, this command isn\'t available.', i, 0)
     if i.args > 0:
         if i.args[0].startswith('http://www.reddit.com/'):
             global REDDIT

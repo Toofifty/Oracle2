@@ -246,10 +246,6 @@ class Oracle(irc.IRC):
                     input.args.append(word)                    
             return self.plugins.process_command(self, input)
         
-        # Temporary, since no ranks are implemented yet.
-        if nick != 'Toofifty' and nick != 'Oracle' and nick != 'Manyman':
-            return False
-        
         charset = (self.config.char, self.config.prchar, self.config.puchar)
         
         # Check if the message is actually a command.
@@ -338,7 +334,8 @@ class Oracle(irc.IRC):
                 return False
             
             # Reload it, if it was found
-            return self.plugins.reload_module(m, self, input)
+            if self.plugins.reload_module(m, self, input):
+                self.l_say('%s reloaded.' % m_s, input, 0)
             
         # This is fine, errors are handled nicely.
         return True

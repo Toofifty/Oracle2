@@ -7,6 +7,10 @@ http://toofifty.me/oracle
 
 import sys, os, subprocess
 import traceback, time
+import format
+import math
+from sympy import *
+from sympy.parsing.sympy_parser import parse_expr, eval_expr
 from format import GREY, WHITE, PURPLE
 
 def _init(b):
@@ -34,15 +38,16 @@ def modules(l, b, i):
 
 def load(l, b, i):
     """
-    !d Load a module into Oracle
-    !a [module]
+    !d Load modules into Oracle
+    !a [modules...]
     !r developer
     """
-    fl = l.load_module(i.args[0], b)
-    
-    if fl:
-        b.l_say('Module loaded.', i, 0)
-    return fl
+    for mod in i.args[0]:
+        if not l.load_module(mod, b):
+            b.l_say('Module failed to load: %s' % mod, i, 0)
+        else:
+            b.l_say('Loaded module: %s' % mod, i, 0)
+    return True
 
 def close(l, b, i):
     """
@@ -244,7 +249,7 @@ def makeadmin(l, b, i):
     
 def open(l, b, i):
     """
-    !d Open a specific directory, the the path of the b
+    !d Open a specific directory, default bot's path
     !a [path]
     !r developer
     """
