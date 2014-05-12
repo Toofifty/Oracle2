@@ -1,6 +1,9 @@
 import random
 import re
+from re import compile
 import socket
+import traceback
+from time import sleep
 from math import *
 from sympy import *
 from sympy.parsing.sympy_parser import parse_expr, eval_expr
@@ -107,7 +110,7 @@ def alias(l, b, i):
         !r user
     """
     def new(l, b, i):
-        splitter = re.compile(r'"(.*?)" "(.*?)"')
+        splitter = compile(r'"(.*?)" "(.*?)"')
         message = ' '.join(i.args[1:])
         spl_match = splitter.match(message)
         if spl_match is not None:
@@ -149,6 +152,7 @@ def alias(l, b, i):
     try:
         exec ('%s(l, b, i)' % i.args[0]) in globals(), locals()
     except Exception, e:
+        traceback.print_exc()
         b.l_say('Usage: %s.alias [new|list|remove]' % CYAN, i, 0)
     return True
     #====================================================================#
@@ -159,7 +163,35 @@ def calc(l, b, i):
     !a [equation...]
     !r user
     """
+    
+    def s(str):
+        b.l_say(str, i, 0)
+    
     if i.args is not None:
+        if i.args[0] == 'help':
+            s('-= %s.CALC %s- Functions guide %s=-' % (PURPLE, GREY, WHITE))
+            s('\t')
+            s('\tBasic arithmetic: %s+%s, %s-%s, %s*%s, %s/%s, %s**%s = a^b, %ssqrt(x)'
+              % (CYAN, GREY, CYAN, GREY, CYAN, GREY, CYAN, GREY, CYAN, GREY, CYAN))
+            s('\tAdvanced: %slog(x)%s, %sexp(x)%s = e^x, %ssin(r)%s, %scos(r)%s, %stan(r)'
+              % (CYAN, GREY, CYAN, GREY, CYAN, GREY, CYAN, GREY, CYAN))
+            s('\t')
+            s('\t%ssolve(Eq(%sequation%s, %sresult%s), %spronumeral%s)' 
+              % (GREY, CYAN, GREY, CYAN, GREY, CYAN, GREY))
+            s('\t\tExample: %ssolve(Eq(%sx**2-4*x-5%s, %s0%s), %sx%s)'
+              % (GREY, CYAN, GREY, CYAN, GREY, CYAN, GREY))
+            s('\t%sdiff(%sf(pronumeral)%s)' % (GREY, CYAN, GREY))
+            s('\t\tExample: %sdiff(%sx**3%s)' % (GREY, CYAN, GREY))
+            s('\t%sintegrate(%sf\'(pronumeral)%s)' % (GREY, CYAN, GREY))
+            s('\t\tExample: %sintegrate(%s3*x**3%s)' % (GREY, CYAN, GREY))
+            s('\t')
+            s('For more functions, check out %sSymPy%s at %shttp://docs.sympy.org/' % (CYAN, WHITE, GREY))
+            return True
+    
+        if 'plot' in i.args:
+            s('Try using the %s.graph%s command instead.' % (PURPLE, WHITE))
+            return True
+    
         try:
             sm = ' '.join(i.args)
             exp = parse_expr(sm)
@@ -175,6 +207,61 @@ def calc(l, b, i):
             return True
             
     b.l_say('Usage: %s.calc [equation...]' % GREY, i, 0)
+    b.l_say('   OR: %s.calc help' % GREY, i, 0)
+    return True
+    
+def prettycalc(l, b, i):
+    """
+    !d Output regular maths in a pretty way
+    !a [equation...]
+    !r user
+    """
+    
+    def s(str):
+        b.l_say(str, i, 0)
+    
+    if i.args is not None:
+    
+        if 'plot' in i.args:
+            s('Try using the %s.graph%s command instead.' % (PURPLE, WHITE))
+            return True
+    
+        try:
+            sm = ' '.join(i.args)
+            exp = parse_expr(sm)
+            try:
+                evald = pretty(exp.evalf())
+                b.l_say('%s%s =' % (PURPLE, sm), i)
+                for line in evald.split('\n'):
+                    b.l_say('\t%s%s' % (GREY, str(line)), i)
+            except:
+                b.l_say('%s%s = %s%s' % (PURPLE, sm, GREY, str(exp)), i)
+            return True
+            
+        except Exception, e:
+            b.l_say('Syntax error: %s' % GREY+str(e), i)
+            return True
+            
+    b.l_say('Usage: %s.calc [equation...]' % GREY, i, 0)
+    b.l_say('   OR: %s.calc help' % GREY, i, 0)
+    return True
+    
+    
+def graph(l, b, i):
+    """
+    !d Graph the given function
+    !a [function...]
+    !r user
+    """
+    if i.args is not None:
+        args = ' '.join(i.args)
+        pl = plot(args, show=True)
+        graph = pretty(pl).split('\n')
+        for line in pl.save('../tempplot.txt'):
+            b.l_say(line, i)
+        return True
+        
+    b.l_say('Usage: %s.graph [function]' % GREY, i, 0)
     return True
     
 def resolve(l, b, i):

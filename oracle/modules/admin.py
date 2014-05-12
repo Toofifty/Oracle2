@@ -7,11 +7,9 @@ http://toofifty.me/oracle
 
 import sys, os, subprocess
 import traceback, time
-import format
-import math
-from sympy import *
-from sympy.parsing.sympy_parser import parse_expr, eval_expr
-from format import GREY, WHITE, PURPLE
+import format as f
+import random
+from format import GREY, WHITE, PURPLE, YELLOW
 
 def _init(b):
     print '\t%s loaded' % __name__
@@ -42,7 +40,7 @@ def load(l, b, i):
     !a [modules...]
     !r developer
     """
-    for mod in i.args[0]:
+    for mod in i.args:
         if not l.load_module(mod, b):
             b.l_say('Module failed to load: %s' % mod, i, 0)
         else:
@@ -56,7 +54,7 @@ def close(l, b, i):
     !r administrator
     """
     if i.args is None:
-        b.l_say('Goodbye!', i, 3)
+        b.l_say(YELLOW+'Goodbye!', i, 3)
     else:
         b.say(' '.join(i.args).capitalize(), channel='all')
     b.exit()
@@ -97,7 +95,14 @@ def restart(l, b, i):
     !r administrator
     """
     if i.args is None:
-        b.l_say('I\'ll be back in a jiffy!', i, 3)
+        quotes = [
+            '(Terminator voice) I\'ll be back!',
+            'I\'ll be back in a jiffy!',
+            'brb',
+            'I\'ll be right back, homies',
+            ]
+        choice = random.randint(1, len(quotes)) - 1
+        b.l_say(YELLOW+quotes[choice], i, 3)
     else:
         boy.say(' '.join(i.args).capitalize(), channel='all')
     b.exit()
@@ -113,7 +118,7 @@ def say(l, b, i):
     """
     !d Instruct Oracle to repeat a word or phrase
     !a [message...]
-    !r administrator
+    !r moderator
     """
     try:
         print 'Saying the phrase:', ' '.join(i.args)

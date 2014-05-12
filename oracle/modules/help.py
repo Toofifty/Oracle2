@@ -32,6 +32,9 @@ def help(loader, bot, input):
         return bot.l_say(str, input, 0)
     
     def append_cmd(cmd, desc):
+        if cmd is '': return
+        if desc is '': return #desc = ''
+
         help_dict[cmd] = desc
         
     def parse_child(function, doc):
@@ -113,32 +116,28 @@ def help(loader, bot, input):
             append_cmd(cmd, d)
             
     def print_line(cmd, desc):
+        margin = 25
+    
         # Ensure the command exists
         # Description doesn't matter as much.
         if cmd is None: return
         if desc is None: desc = ''
 
+        cmdlen = len(cmd)
+        
         # Game has different kerning, so aligning
         # the message wouldn't look right.
-        
-        # Not game
         if input.game == '':
-            cmd = cmd.ljust(25)
-            cmd = cmd.replace('<',BRKT+'<'+FILL).replace('>',BRKT+'>'+BASE)
-            cmd = cmd.replace('[',BRKT+'['+FILL).replace(']',BRKT+']'+BASE)
-            cmd = cmd.replace('...',BRKT+'...'+BASE)
-            
-            str = '%s - %s' % (BASE + cmd, FILL + desc)
-        # In game
-        else:
-            cmd = cmd.replace('<',BRKT+'<'+FILL).replace('>',BRKT+'>'+BASE)
-            cmd = cmd.replace('[',BRKT+'['+FILL).replace(']',BRKT+']'+BASE)
-            cmd = cmd.replace('...',BRKT+'...'+BASE)
-            
-            str = '%s - %s' % (BASE + cmd, FILL + desc)
+            cmd = cmd.ljust(margin)
+        cmd = cmd.replace('<',BRKT+'<'+FILL).replace('>',BRKT+'>'+BASE)
+        cmd = cmd.replace('[',BRKT+'['+FILL).replace(']',BRKT+']'+BASE)
+        cmd = cmd.replace('...',BRKT+'...'+BASE)
 
         # Say the line to the user.
-        return s(str)
+        if cmdlen > margin and input.game == '':
+            s(BASE + cmd)
+            cmd = ' '.ljust(margin)
+        return s('%s - %s' % (BASE + cmd, FILL + desc))
             
     def get_page_count():
         return math.ceil(len(help_dict) / 10.0)
@@ -155,7 +154,7 @@ def help(loader, bot, input):
             s('%s================ Page: %d/%d ================' % (PURPLE, page, max_page))
             s('\t')
         else:
-            s('%sPage %d/%d:' % (PURPLE, page, max_page))
+            s('%s< Page %d/%d >' % (PURPLE, page, max_page))
             
         # 10 per page
         start = 10 * page - 10
@@ -168,17 +167,28 @@ def help(loader, bot, input):
                 print_line(k, v)
             count += 1
             
+            
         if input.game != '':
             s('\t')
             s('%s=========================================' % PURPLE)
+        else:
+            s('%s< End Page >' % PURPLE)
             
         return True
     
     try:
     
         # User might ask for categories
-        if input.args is not None and input.args[0] == 'categories':
-            return categories(loader, bot, input)
+        if input.args is not None:
+            if input.args[0] == 'categories':
+                return categories(loader, bot, input)
+            elif input.args[0] == 'all':
+                page = 1
+                try:
+                    page = int(input.args[1])
+                except IndexError:
+                    pass
+                return print_all(page)
         
         # Grab the module from the laoded modules
         # This will throw a KeyError if no module is found,

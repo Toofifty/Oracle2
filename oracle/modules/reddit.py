@@ -23,6 +23,11 @@ def _init(bot):
     print '\t%s loaded' % __name__
     
 def parsereddit(l, b, i):
+    """
+    !d Parse a Reddit link into it's information
+    !a [link]
+    !r user
+    """
     if not active:
         return b.l_say('Sorry, this command isn\'t available.', i, 0)
     if i.args > 0:

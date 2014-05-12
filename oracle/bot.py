@@ -145,10 +145,7 @@ class Oracle(irc.IRC):
         if 'PRIVMSG' in w[1]:
             w[3] = w[3].replace(':', '', 1)
             
-            if w[2] is not self.config.nick:
-                return self.chat_event(nick, w[2], w[3:])
-            else:
-                return self.message_event(nick, ' '.join(w[3:]))
+            return self.chat_event(nick, w[2], w[3:])
                 
             
     def chat_event(self, nick, channel, message):
