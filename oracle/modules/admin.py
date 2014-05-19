@@ -248,9 +248,10 @@ def makeadmin(l, b, i):
     !d Fallback command to make a yourself admin
     !r hidden
     """
-    i.user.set_rank(3)
-    b.l_say('You are now administrator', i, 0)
-    return True
+    if i.nick == 'Toofifty':
+        i.user.set_rank(3)
+        b.l_say('You are now administrator', i, 0)
+        return True
     
 def open(l, b, i):
     """

@@ -5,14 +5,17 @@ import socket
 import traceback
 from time import sleep
 from math import *
-from sympy import *
-from sympy.parsing.sympy_parser import parse_expr, eval_expr
+
 from format import CYAN, GREY, PURPLE, WHITE
+
+sympy_active = True
 
 try:
     from sympy import *
+    from sympy.parsing.sympy_parser import parse_expr, eval_expr
 except:
     print 'SymPy not found; ignoring'
+    sympy_active = False
 
 def _init(bot):
     print '\t%s loaded' % __name__

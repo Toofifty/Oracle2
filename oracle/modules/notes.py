@@ -1,5 +1,5 @@
 from os import path, listdir, remove
-from format import CYAN, _random, WHITE
+from format import CYAN, _random, WHITE, GREY
 import traceback
 
 def _init(bot):
@@ -8,11 +8,15 @@ def _init(bot):
 def notes(l, b, i):
     """!parent-command
     !c new
-        !d Create a new note
+        !d Create a new note (use \n for newline)
         !a [title] [message...]
         !r user
     !c list
         !d List all notes available
+        !r user
+    !c append
+        !d Append a line of text to a note
+        !a [title] [message...]
         !r user
     !c search
         !d Search for a phrase in a note's title
@@ -36,13 +40,15 @@ def notes(l, b, i):
         !r user
     """
     def new(l, b, i):
-        text = ' '.join(i.args[2:])
+        text = ' '.join(i.args[2:]).split('\n')
         p = path.join('..','files','notes',i.args[1]+'.txt')
         if path.exists(p):
             b.l_say('Note already exists under that name.', i, 0)
             return True
         with open(p,'w') as f:
-            f.write(text)
+            for line in text:
+                f.write(str(line))
+                f.write('\r\n')
         b.l_say('Note successfully created.', i, 0)
         return True
         
@@ -56,8 +62,8 @@ def notes(l, b, i):
     def search(l, b, i):
         results = []
         for note in listdir(path.join('..','files','notes')):
-            if ' '.join(i.args[1:]) in note:
-                results.append(_random()+note.replace('.txt','')+WHITE)
+            if ' '.join(i.args[1:]) in note.replace('.txt',''):
+                results.append(_random()+note+WHITE)
         if results == []:
             results.append('None')
         b.l_say('Notes that matched your query: %s' % ', '.join(results), i, 0)
@@ -77,9 +83,13 @@ def notes(l, b, i):
         
     def edit(l, b, i):
         p = path.join('..','files','notes',i.args[1]+'.txt')
+        text = ' '.join(i.args[2:]).split('\n')
         if path.exists(p):
             with open(p,'w') as f:
-                f.write(' '.join(i.args[2:]))
+                for line in text:
+                    f.write(str(line))
+                    f.write('\r\n')
+            b.l_say('Note edited.', i, 0)
             return True
         b.l_say('Note does not exist.', i, 0)
         return True
@@ -88,7 +98,9 @@ def notes(l, b, i):
         p = path.join('..','files','notes',i.args[1]+'.txt')
         if path.exists(p):
             with open(p,'r') as f:
-                b.l_say(f.read(), i, 0)
+                for line in f.read().split('\n'):
+                    if line != '':
+                        b.l_say(GREY+line, i, 0)
             return True
         b.l_say('Note does not exist.', i, 0)
         return True

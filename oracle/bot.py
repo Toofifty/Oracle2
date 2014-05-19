@@ -254,7 +254,6 @@ class Oracle(irc.IRC):
                 self.plugins.event(self, 'command', (input))
                 return self.plugins.process_command(self, input)
         return False
-        
     
     def message_event(self, nick, message):
         """Message event called by 'PRIVMSG self'."""
@@ -406,6 +405,10 @@ class Oracle(irc.IRC):
         
         return VERSION
         
+    
+    def new_input(self, nick, channel, message):
+        return Input(nick, channel, message)
+        
         
     
 class Input(object):
@@ -504,7 +507,7 @@ def parse_options():
                  help='add a module to the inclusions list, overrides config')
     
     b.add_option('-r', '--excl-module', action='append', type='string', 
-                 dest='excluded', default=[],
+                 dest='excluded', default=['modules.input'],
                  help='add a module to the exclusions list, overrides config')
     
     b.add_option('--char', action='store', type='string', dest='char', 
