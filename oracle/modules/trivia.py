@@ -83,14 +83,18 @@ class TriviaClass(Thread):
     def _get_disabled(self):
         return self.disabled
         
+    def print_question(self):
+        if self.current != '':
+            self.bot.say('%s %s (%d)' % (self.format, self.current, 
+                                         len(self.get_answer().split(' '))), 'all')
+            self.bot.say('%s Use .a [answer] to answer.' % self.format, 'all')
+            return
+        self.bot.say('%s There is no trivia question at the moment.' % self.format, 'all')
+        
     def end_cycle(self):
-        if not self.current == '':
-            self.bot.say('%s Nobody got it! New round.' % self.format, 'all')
         self.current = self.get_question()
         self.answer = self.get_answer()
-        self.bot.say('%s %s (%d)' % (self.format, self.current, 
-                                     len(self.get_answer().split(' '))), 'all')
-        self.bot.say('%s Use .a [answer] to answer.' % self.format, 'all')
+        self.print_question()
         
     def kill(self):
         self.dead = True
@@ -101,7 +105,7 @@ class TriviaClass(Thread):
     def run(self):
         while not self.dead:
             time.sleep(self.interval)
-            if not self.disabled:
+            if not self.disabled and self.current == '':
                 self.end_cycle()
                 
     def instance(self):
@@ -121,6 +125,9 @@ def trivia(l, b, i):
     !c info
         !d Get info on trivia
         !r user
+    !c repeat
+        !d Ask the current trivia question again
+        !r user
     """
     def new(l, b, i):
         global cls
@@ -138,6 +145,10 @@ def trivia(l, b, i):
         questions, interval = cls.get_info()
         b.l_say('%s Time interval: %d (%d minutes), %d questions listed.' %
                 (cls.format, interval, interval/60, questions), i, 0)
+                
+    def repeat(l, b, i):
+        global cls
+        cls.print_question()
     
     try:
         exec ('%s(l, b, i)' % i.args[0]) in globals(), locals()

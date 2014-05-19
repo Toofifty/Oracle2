@@ -271,6 +271,7 @@ def categories(l, b, i):
             'modules.admin',
             'modules.format',
             'modules.log',
+            'modules.input',
         ]
     
     message = []

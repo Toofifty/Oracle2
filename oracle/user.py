@@ -62,7 +62,7 @@ class User:
         return self.true_name
     
     def set_points(self, am):
-        self.points = am
+        self.points = int(am)
         return self.points
     
     def set_rank(self, rank):
@@ -77,7 +77,9 @@ class User:
         return self.commands
     
     def add_points(self, am):
-        self.points += am
+        self.points += int(am)
+        if not isinstance(self.points, int):
+            self.points = int(self.points)
         return self.points
         
     def has_attribute(self, attr):
