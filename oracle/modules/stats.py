@@ -122,15 +122,7 @@ def score(l, b, i):
         
     def add(l, b, i):
         pass
-        
-    def rem(l, b, i):
-        pass
-            return b.l_say('%s does not seem to have a user file.'\
-                           % (GREY + n + WHITE), i, 0)
-        user = b.get_user(n)
-        b.l_say('%s has %s%d%s points.' % (GREY+user.get_name()+WHITE, GREEN,
-                                           user.get_points(), WHITE), i, 0)
-        
+    
     def set(l, b, i):
         if len(i.args) > 2:
             user = b.get_user(i.args[1])
