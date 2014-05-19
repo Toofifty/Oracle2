@@ -6,10 +6,6 @@ http://toofifty.me/oracle
 """
 
 import os, inspect, traceback
-<<<<<<< HEAD
-=======
-import operator as op
->>>>>>> 82df278e9019c6090e52edfb93bcdb6940190c57
 
 from format import CYAN, WHITE, GREY, PURPLE, RED, GREEN, _random
 
@@ -88,9 +84,6 @@ def score(l, b, i):
     PATH = os.path.join('..', 'files', 'users')
     
     def top(l, b, i):
-<<<<<<< HEAD
-        b.l_say('test', i, 0)
-=======
         all_scores = {}
         for file in os.listdir(PATH):
             name = file.replace('.json', '')
@@ -106,7 +99,6 @@ def score(l, b, i):
             n += 1
             if n > amount: break
         return True
->>>>>>> 82df278e9019c6090e52edfb93bcdb6940190c57
         
     def check(l, b, i):
         n = i.nick
@@ -114,17 +106,13 @@ def score(l, b, i):
             return b.l_say('%sYou don\'t seem to have a user file - make one '
                            'by rejoining the IRC channel.' % RED, i, 0)
         user = b.get_user(n)
-<<<<<<< HEAD
         return b.l_say('You have %s%d%s points.' % (GREEN, user.get_points(), WHITE), i, 0)
-=======
         return b.l_say('You have %s%d%s points.' % (GREEN, user.get_points(),
                                                     WHITE), i, 0)
->>>>>>> 82df278e9019c6090e52edfb93bcdb6940190c57
         
     def peek(l, b, i):
         n = i.args[1]
         if not n + '.json' in os.listdir(PATH):
-<<<<<<< HEAD
             return b.l_say('%s does not seem to have a user file.' % (GREY + n + WHITE), i, 0)
         user = b.get_user(n)
         b.l_say('%s has %s%d%s points.' % (GREY+user.get_name()+WHITE, GREEN, user.get_points(), WHITE), i, 0)
@@ -137,7 +125,6 @@ def score(l, b, i):
         
     def rem(l, b, i):
         pass
-=======
             return b.l_say('%s does not seem to have a user file.'\
                            % (GREY + n + WHITE), i, 0)
         user = b.get_user(n)
@@ -176,7 +163,6 @@ def score(l, b, i):
             b.l_say('%s%s%s now has %s%d%s points' % (GREY, i.args[1], WHITE,
                                                       GREEN, p, WHITE), i, 0)
             return True
->>>>>>> 82df278e9019c6090e52edfb93bcdb6940190c57
     
     # CHILD COMMAND CONSTRUCTOR
     # Copy/paste-able :)
