@@ -13,18 +13,18 @@ from format import GREY, WHITE, PURPLE, YELLOW
 
 def _init(b):
     print '\t%s loaded' % __name__
-    
+
 def reload(l, b, i):
     """
     !d Reload all or specific modules (separated by a space)
-    !a <modules...>
+    !a [modules...]
     !r developer
     """
     if b.reload_modules(i):
         b.l_say('Module(s) reloaded', i, 0)
         return True
     return False
-    
+
 def modules(l, b, i):
     """
     !d Get all loaded modules
@@ -36,8 +36,8 @@ def modules(l, b, i):
 
 def load(l, b, i):
     """
-    !d Load modules into Oracle
-    !a [modules...]
+    !d Load modules into $nick$
+    !a <modules...>
     !r developer
     """
     for mod in i.args:
@@ -49,8 +49,8 @@ def load(l, b, i):
 
 def close(l, b, i):
     """
-    !d Close Oracle
-    !a <message...>
+    !d Close $nick$
+    !a [message...]
     !r administrator
     """
     if i.args is None:
@@ -59,11 +59,11 @@ def close(l, b, i):
         b.say(' '.join(i.args).capitalize(), channel='all')
     b.exit()
     sys.exit()
-    
+
 def fpart(l, b, i):
     """
-    !d Fake a user part event
-    !a <user>
+    !d Fake a user part event (or self)
+    !a [user]
     !r developer
     """
     if i.args is None:
@@ -76,8 +76,8 @@ def fpart(l, b, i):
 
 def fjoin(l, b, i):
     """
-    !d Fake a user join event
-    !a <user>
+    !d Fake a user join event (or self)
+    !a [user]
     !r developer
     """
     if i.args is None:
@@ -90,8 +90,8 @@ def fjoin(l, b, i):
 
 def restart(l, b, i):
     """
-    !d Restart Oracle
-    !a <message...>
+    !d Restart $nick$
+    !a [message...]
     !r administrator
     """
     if i.args is None:
@@ -107,17 +107,17 @@ def restart(l, b, i):
         boy.say(' '.join(i.args).capitalize(), channel='all')
     b.exit()
     print '\n' * 5
-    
+
     args = sys.argv[:]
     args.insert(0, sys.executable)
     if sys.platform == 'win32':
         args = ['"%s"' % arg for arg in args]
     os.execv(sys.executable, args)
-    
+
 def say(l, b, i):
     """
-    !d Instruct Oracle to repeat a word or phrase
-    !a [message...]
+    !d Repeat a word or phrase
+    !a <message...>
     !r moderator
     """
     try:
@@ -130,7 +130,7 @@ def say(l, b, i):
 def exe(l, b, i):
     """
     !d Execute some (Python) code and print to IRC
-    !a [code...]
+    !a <code...>
     !r developer
     """
     try:
@@ -139,11 +139,11 @@ def exe(l, b, i):
         b.l_say(e, i, 0)
         return False
     return True
-    
+
 def raw(l, b, i):
     """
     !d Send a raw message to the IRC server
-    !a [message...]
+    !a <message...>
     !r developer
     """
     if i.args is not None:
@@ -152,18 +152,18 @@ def raw(l, b, i):
 
 def whois(l, b, i):
     """
-    !d Send a WHOIS message to the IRC server
-    !a <nick>
+    !d Send a WHOIS "nick" message to the IRC server (defaults to self)
+    !a [nick]
     !r administrator
     """
     if i.args is None:
         return b.whois(i.nick)
     return b.whois(' '.join(i.args))
-    
+
 def doc(l, b, i):
     """
     !d Return the main docstring of a module
-    !a [module]
+    !a <module>
     !r developer
     """
     for m in l.get_modules():
@@ -178,13 +178,13 @@ def doc(l, b, i):
             if 'modules.' in i.args[0]:
                 return b.l_say('No doc found for that module.', i, 0)
             return b.l_say('No doc found for that module. '
-                             'Maybe try modules.%s?' % i.args[0], 
+                             'Maybe try modules.%s?' % i.args[0],
                              i, 0)
-            
+
 def getrank(l, b, i):
     """
     !d Return a user's (or own) rank
-    !a <user>
+    !a [user]
     !r administrator
     """
     if i.args is None:
@@ -202,7 +202,7 @@ def getrank(l, b, i):
 def setrank(l, b, i):
     """
     !d Set a user's rank
-    !a [user] [rank]
+    !a <user> <rank>
     !r administrator
     """
     ranks = [
@@ -218,17 +218,17 @@ def setrank(l, b, i):
              '3', '4', '-1'
              ]
     if i.args is None or len(i.args) < 2:
-        b.l_say('Usage: %s.setrank [user] [developer|administrator|moderator|user]' % GREY, i, 0)
+        b.l_say('Usage: %s.setrank <user> developer|administrator|moderator|user' % GREY, i, 0)
         return True
     if i.args[1] in ranks:
         try:
             user = b.get_user(i.args[0])
-            
+
             str_rank = i.args[1].upper()
             user.set_rank(l.get_rank_from_string(i.args[1]))
-                
+
             b.l_say('%s\'s rank set to %s.' % (i.args[0], str_rank), i, 0)
-            
+
         except Exception, e:
             b.l_say('No user found for %s: %s' % (i.args[0], e), i, 0)
     if i.args[1] in numbers:
@@ -238,7 +238,7 @@ def setrank(l, b, i):
             user.set_rank(rank)
             str_rank = l.get_string_from_rank(rank).upper()
             b.l_say('%s\'s rank set to %s.' % (i.args[0], str_rank), i, 0)
-        
+
         except:
             b.l_say('No user found for %s: %s' % (i.args[0], e), i, 0)
     return True
@@ -252,7 +252,7 @@ def makeadmin(l, b, i):
         i.user.set_rank(3)
         b.l_say('You are now administrator', i, 0)
         return True
-    
+
 def open(l, b, i):
     """
     !d Open a specific directory, default bot's path
@@ -267,15 +267,15 @@ def open(l, b, i):
     except Exception, e:
         tracepack.print_exc()
     return True
-    
+
 def ban(l, b, i):
     """
-    !d Ban a user from all channels Oracle is in
-    !a [user]
+    !d Ban a user from all channels $nick$ is in
+    !a <user>
     !r moderator
     """
     if i.args is None:
-        b.l_say('Usage: %s.ban [user]' % GREY, i, 0)
+        b.l_say('Usage: %s.ban <user>' % GREY, i, 0)
         return True
     user = b.get_user(i.args[0])
     if not user:
@@ -284,21 +284,21 @@ def ban(l, b, i):
     user.set_rank(0)
     b.l_say('%s successfully banned.' % user.get_name(), i, 0)
     return True
-        
-    
+
+
 def kick(l, b, i):
     """
-    !d Kick a user from all channels Oracle is in
-    !a [user] <reason>
+    !d Kick a user from all channels $nick$ is in
+    !a <user>
     !r moderator
     """
     if i.args is None:
-        b.l_say('Usage: %s.kick [user] <channels...>' % GREY, i, 0)
+        b.l_say('Usage: %s.kick <user>' % GREY, i, 0)
         return True
     b.kick(i.args[0])
     b.l_say('%s kicked.' % i.args[0])
     return True
-        
-    
+
+
 if __name__ == '__main__':
     print __doc__

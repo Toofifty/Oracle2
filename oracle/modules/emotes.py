@@ -20,7 +20,7 @@ def puttableback(l, b, i):
     return True
 
 def ohyou(l, b, i): 
-    """¯_(ツ)_/¯"""
+    """¯\_(ツ)_/¯"""
     b.l_say(ohyou.__doc__, i)
     return True
 
@@ -89,9 +89,9 @@ def happybirthday(l, b, i):
     b.l_say(happybirthday.__doc__, i)
     return True
 
-def sunglasses(l, b, i): 
+def dealwithit(l, b, i): 
     """( •_•) ( •_•)>⌐■-■ (⌐■_■)"""
-    b.l_say(sunglasses.__doc__, i)
+    b.l_say(dealwithit.__doc__, i)
     return True
 
 def rage(l, b, i): 

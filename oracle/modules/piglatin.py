@@ -2,36 +2,36 @@ import re
 
 def _init(bot):
     print '\t%s loaded' % __name__
-    
+
 def piglatin(l, b, i):
     """
     !d Translate the given phrase to Pig Latin (and back, using -)
-    !a <-> [message...]
+    !a [-] <message...>
     !r user
     """
     if i.args[0] == '-':
         b.l_say('Sorry! This has not been implemented yet.', i, 0)
     else:
         out = ''
-        vowel_pattern = re.compile(r'^[aeiouAEIOU]')    
-        consonant_pattern = re.compile(r'^([^aeiouAEIOU]+)(.*)')    
+        vowel_pattern = re.compile(r'^[aeiouAEIOU]')
+        consonant_pattern = re.compile(r'^([^aeiouAEIOU]+)(.*)')
         punc_s_pattern = re.compile(r'^(\W+)')
         punc_e_pattern = re.compile(r'(\W+)$')
         for word in i.args:
             punc_s = ''
             punc_e = ''
-            
+
             psp_match = punc_s_pattern.match(word)
             if psp_match is not None:
                 punc_s = psp_match.group(1)
                 word = word.replace(punc_s, '')
-            
+
             pep_match = punc_e_pattern.match(word)
             if pep_match is not None:
                 punc_e = pep_match.group(1)
                 print punc_e
                 word = word.replace(punc_e, '')
-            
+
             c_v_match = vowel_pattern.match(word)
             if c_v_match is not None:
                 out += punc_s + word + 'ay' + punc_e + ' '
@@ -41,12 +41,12 @@ def piglatin(l, b, i):
                 out += punc_s + c_p_match.group(2) + c_p_match.group(1) + 'ay' + punc_e + ' '
         b.l_say('%s: %s' % (i.nick, out), i, 1)
         return True
-            
-    
+
+
 def opish(l, b, i):
     """
     !d Translate the given phrase to Opish (and back, using -)
-    !a <-> [message...]
+    !a [-] <message...>
     !r user
     """
     if i.args[0] == '-':
@@ -79,7 +79,7 @@ def opish(l, b, i):
 def turkeyirish(l, b, i):
     """
     !d Translate the given phrase to Turkey Irish (and back, using -)
-    !a <-> [message...]
+    !a [-] <message...>
     !r user
     """
     #Add -ab after every consonant group
@@ -88,7 +88,7 @@ def turkeyirish(l, b, i):
 def doubledutch(l, b, i):
     """
     !d Translate the given phrase to Double Dutch (and back, using -)
-    !a <-> [message...]
+    !a [-] <message...>
     !r user
     """
     if i.args[0] == '-':

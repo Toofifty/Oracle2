@@ -51,11 +51,10 @@ def _random():
 
 def _init(bot):
     print '\t%s loaded' % __name__
-    
+
 def _console_colours(text):
     text = unicode(' '.join(text))
     for colour in console:
         if colour in text:
             text = text.replace(colour, console[colour])
     return text
-    

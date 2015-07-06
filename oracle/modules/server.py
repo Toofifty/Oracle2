@@ -14,17 +14,17 @@ USER = None
 
 def _init(bot):
     print '\t%s loaded' % __name__
-    
+
 def utc(l, b, i):
     """
     !d Get the current UTC time (used for server events)
-    !r user    
+    !r user
     """
     d = datetime.utcnow()
     t = calendar.timegm(d.utctimetuple())
     b.l_say('Current UTC time: %s' % str(time.ctime(t)), i, 0)
     return True
-    
+
 def ip(l, b, i):
     """
     !d Get the current, working IP of the server
@@ -33,7 +33,7 @@ def ip(l, b, i):
     try:
         data = socket.gethostbyname_ex('s.rapidcraftmc.com')
         b.l_say('s.rapidcraftmc.com resolved to IP: %s' % str(data[2]), i, 0)
-        
+
     except:
         global DOMAIN
         if DOMAIN is '':
@@ -48,12 +48,12 @@ def ip(l, b, i):
         except:
             b.l_say('No IP could be found, sorry!', i, 0)
     return True
-            
+
 def _whois_311(bot, args):
     nick, realname, domain = args
     if realname != '~PircBot':
         return
-    
+
     global DOMAIN
     DOMAIN = domain
     global USER
