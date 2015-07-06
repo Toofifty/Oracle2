@@ -94,6 +94,9 @@ def help(loader, bot, input):
 
             for line in doc.split('\n'):
 
+                print line
+                print function.__module__
+
                 # Description
                 if line.startswith('!d '):
                     d = line.replace('!d ', '').capitalize()
@@ -108,6 +111,10 @@ def help(loader, bot, input):
                     r = loader.get_rank_from_string(str)
                     if not u_rank >= r:
                         return
+
+                # Emotes
+                elif function.__module__ == 'modules.emotes':
+                    append_cmd(function.__name__, line)
 
             cmd = function.__name__.upper()
             if a != '':
@@ -128,16 +135,16 @@ def help(loader, bot, input):
 
         # Game has different kerning, so aligning
         # the message wouldn't look right.
-        if input.game == '':
-            cmd = cmd.ljust(margin)
+#        if input.game == '':
+#            cmd = cmd.ljust(margin)
         cmd = cmd.replace('<',BRKT+'<'+FILL).replace('>',BRKT+'>'+BASE)
         cmd = cmd.replace('[',BRKT+'['+FILL).replace(']',BRKT+']'+BASE)
         cmd = cmd.replace('...',BRKT+'...'+BASE)
 
         # Say the line to the user.
-        if cmdlen > margin and input.game == '':
-            s(BASE + cmd)
-            cmd = ' '.ljust(margin)
+#        if cmdlen > margin and input.game == '':
+#            s(BASE + cmd)
+#            cmd = ' '.ljust(margin)
         return s('%s - %s' % (BASE + cmd, FILL + desc))
 
     def get_page_count():
@@ -217,10 +224,10 @@ def help(loader, bot, input):
             '  tracker located at https://github.com/Toofifty/Oracle2/issues',
             '  ',
             'CHANGELOG:',
-            '  30/07/2014',
-            '    > Added commands: .help all|oracle , .reddit',
-            '    > Fixed some command definitions',
-            '    > Began changelog',
+            '\t30/07/2014',
+            '\t\t> Added commands: .help all|oracle , .reddit',
+            '\t\t> Fixed some command definitions',
+            '\t\t> Began changelog',
             '  ',
             'CURRENT BUGS:',
             '  - Bot does not authenticate with NickServ',
@@ -247,7 +254,7 @@ def help(loader, bot, input):
         if input.args is not None:
             if input.args[0] == 'categories':
                 return categories(loader, bot, input)
-            elif input.args[0] == bot.nick.lower():
+            elif input.args[0] in [bot.nick.lower(), 'oracle']:
                 return print_oracle_help()
             elif input.args[0] == 'all':
                 page = 1
@@ -311,7 +318,7 @@ def help(loader, bot, input):
         s('\t')
         s('%sHELP %susage:' % (PURPLE, WHITE))
         s('\t%s.help' % CYAN)
-        s('\t%s.help $nick.lower()$' % CYAN)
+        s('\t%s.help $nick$' % CYAN)
         s('\t%s.help %s<%scategory%s> [%spage%s]'
           % (CYAN, WHITE, GREY, WHITE, GREY, WHITE))
         s('\t%s.help %s<%scommand%s>' % (CYAN, WHITE, GREY, WHITE))
