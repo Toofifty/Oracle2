@@ -8,7 +8,7 @@ http://toofifty.me/oracle
 import urllib, json
 from datetime import datetime
 
-from format import GREEN, RED, BLUE, WHITE, BOLD, ITALICS
+from format import GREEN, RED, BLUE, WHITE, BOLD, ITALICS, RESET
 
 def _init(bot):
     print '\t%s loaded' % __name__
@@ -26,7 +26,8 @@ def fullparseyoutube(l, b, i):
             vidid = vidid.split('&')[0]
             vidid = vidid.split('=')[1]
 
-        meta_data_link = ('https://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=json' % vidid)
+        api_key = 'AIzaSyABEUwRK3ZqlkMXSG7Nw9TdZxI3slGLdnM'
+        meta_data_link = ('https://www.googleapis.com/youtube/v3/videos?key=%s&part=snippet&id=%s' % (api_key, vidid))
         tables = urllib.urlopen(meta_data_link)
         meta_data = json.loads(tables.read())
         print meta_data
@@ -51,10 +52,27 @@ def parseyoutube(l, b, i):
     !r user
     """
     def parsevid(vidid):
-        meta_data_link = ('https://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=json' % vidid)
-        tables = urllib.urlopen(meta_data_link)
-        data = json.loads(tables.read())
+        api_key = 'AIzaSyABEUwRK3ZqlkMXSG7Nw9TdZxI3slGLdnM'
+        meta_data_link = ('https://www.googleapis.com/youtube/v3/videos?key=%s&part=snippet&id=%s' % (api_key, vidid))
 
+        tables = urllib.urlopen(meta_data_link)
+        data = json.loads(tables.read())['items'][0]['snippet']
+        print data
+
+        title = data['title']
+        description = data['description'].replace('\n', ' ')
+        if description == '':
+            description = 'No description available.'
+        author = data['channelTitle']
+        published = data['publishedAt'].split('T')
+        date = published[0]
+        time = published[1].split('.')[0]
+
+        b.l_say('Youtube video: %s%s%s by %s%s' % (BOLD, title, RESET, BOLD, author), i)
+        b.l_say('Description: %s | Published: %s' % (description, date), i)
+
+
+        '''
         title = author = duration = views = favourites = None
         likes = dislikes = description = date = None
         title = data['entry']['title']['$t']
@@ -88,11 +106,14 @@ def parseyoutube(l, b, i):
                 date), i)
 
         b.l_say('Description: %s' % ITALICS + description, i)
-
+        '''
     if i.args is not None:
         for link in i.args:
-            b.l_say('Getting data for %s' % link, i, 0)
-            if link.startswith('http'):
+            # b.l_say('Getting data for %s' % link, i, 0)
+            if 'youtu.be' in link:
+                vidid = link.split('.be/')[1]
+                vidid = vidid.split('?')[0]
+            elif link.startswith('http'):
                 vidid = link.split('&')[0]
                 vidid = vidid.split('=')[1]
             parsevid(vidid)
@@ -109,3 +130,18 @@ def pyt(l, b, i):
     !r user
     """
     return parseyoutube(l, b, i)
+
+def _chat(bot, args):
+    n, c, m = args
+    if 'www.youtube.com' in ' '.join(m) or 'youtu.be' in ' '.join(m):
+        input = bot.new_input(n, c, m)
+        # Treat input as a command.
+        input.set_command('parseyoutube')
+        input.set_level(1)
+        input.set_user(bot.get_user(n))
+        input.args = []
+        # Handle multiple links
+        for word in m:
+            if 'www.youtube.com' in word or 'youtu.be' in word:
+                input.args.append(word)
+        bot.plugins.process_command(bot, input)

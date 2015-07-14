@@ -4,6 +4,7 @@ import random
 from colorama import init, Fore, Back, Style
 init(autoreset=True)
 
+RESET = '\x0F'
 BOLD = '\x02'
 ITALICS = '\x1D'
 UNDERLINE = '\x1F'
@@ -53,7 +54,7 @@ def _init(bot):
     print '\t%s loaded' % __name__
 
 def _console_colours(text):
-    text = unicode(' '.join(text))
+    text = ' '.join(text).encode('ascii', 'ignore')
     for colour in console:
         if colour in text:
             text = text.replace(colour, console[colour])

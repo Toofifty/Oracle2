@@ -10,7 +10,7 @@ import traceback
 import math
 import time
 
-from format import WHITE, CYAN, GREY, PURPLE
+from format import RESET, CYAN, GREY, PURPLE
 
 def _init(bot):
     print '\t%s loaded' % __name__
@@ -93,9 +93,6 @@ def help(loader, bot, input):
                 return
 
             for line in doc.split('\n'):
-
-                print line
-                print function.__module__
 
                 # Description
                 if line.startswith('!d '):
@@ -223,7 +220,7 @@ def help(loader, bot, input):
             '  Please report these either directly to Toofifty or the GitHub issue',
             '  tracker located at https://github.com/Toofifty/Oracle2/issues',
             '  ',
-            'CHANGELOG:',
+            'Recent changes:',
             '\t30/07/2014',
             '\t\t> Added commands: .help all|oracle , .reddit',
             '\t\t> Fixed some command definitions',
@@ -307,7 +304,7 @@ def help(loader, bot, input):
 
             else:
                 s('%sUnknown argument: %s%s%s.\n\t'
-                  % (WHITE, PURPLE, input.args[0], WHITE))
+                  % (RESET, PURPLE, input.args[0], RESET))
 
         # Can't find the query anywhere, so we'll
         # print the default help message
@@ -316,18 +313,18 @@ def help(loader, bot, input):
             s('\t')
         s('Welcome to the $nick$ help guide!')
         s('\t')
-        s('%sHELP %susage:' % (PURPLE, WHITE))
+        s('%sHELP %susage:' % (PURPLE, RESET))
         s('\t%s.help' % CYAN)
         s('\t%s.help $nick$' % CYAN)
         s('\t%s.help %s<%scategory%s> [%spage%s]'
-          % (CYAN, WHITE, GREY, WHITE, GREY, WHITE))
-        s('\t%s.help %s<%scommand%s>' % (CYAN, WHITE, GREY, WHITE))
+          % (CYAN, RESET, GREY, RESET, GREY, RESET))
+        s('\t%s.help %s<%scommand%s>' % (CYAN, RESET, GREY, RESET))
         s('\t%s.help search %s<%sphrase...%s> [%spage%s]'
-          % (CYAN, WHITE, GREY, WHITE, GREY, WHITE))
-        s('\t%s.help all %s[%spage%s]' % (CYAN, WHITE, GREY, WHITE))
+          % (CYAN, RESET, GREY, RESET, GREY, RESET))
+        s('\t%s.help all %s[%spage%s]' % (CYAN, RESET, GREY, RESET))
         s('\t')
         s('Categories can be listed with')
-        s('the %s.categories%s command.' % (CYAN, WHITE))
+        s('the %s.categories%s command.' % (CYAN, RESET))
         if input.game != '':
             s('\t')
             s('%s=========================================' % PURPLE)
@@ -353,7 +350,7 @@ def categories(l, b, i):
         if not m in restricted:
             message.append(m.replace('modules.','').capitalize())
     b.l_say('%sCategories: %s%s' % (CYAN, PURPLE,
-                (WHITE+', '+PURPLE).join(message)), i, 0)
+                (RESET+', '+PURPLE).join(message)), i, 0)
     return True
 
 

@@ -5,21 +5,10 @@ reddit.py plugin module
 http://toofifty.me/oracle
 """
 
-active = True
-
-try:
-    import praw
-except:
-    print 'PRAW library not found; reddit.py module will not work'
-    active = False
-
-USER_AGENT = ('Oracle IRC link grabber script '
-              'by /u/Toofifty')
-REDDIT = None
+import urllib, json
+from format import BOLD, RESET
 
 def _init(bot):
-    global REDDIT
-    REDDIT = praw.Reddit(user_agent=USER_AGENT)
     print '\t%s loaded' % __name__
 
 def parsereddit(l, b, i):
@@ -28,24 +17,39 @@ def parsereddit(l, b, i):
     !a <link>
     !r user
     """
-    if not active:
-        return b.l_say('Sorry, this command isn\'t available.', i, 0)
-    if i.args > 0:
-        if i.args[0].startswith('http://www.reddit.com/'):
-            global REDDIT
-            print REDDIT
-            for thing in REDDIT.get_content(i.args[0]):
-                if isinstance(thing, praw.objects.Submission):
-                    print thing
-                    b.l_say(thing.short_link, i, 0)
-                else:
-                    print thing
+    def parselink(link):
+        meta_data_link = link + '.json'
+        tables = urllib.urlopen(meta_data_link)
+        data = json.loads(tables.read())[0]['data']['children'][0]['data']
 
-        else:
-            b.l_say('Please provide a Reddit link.', i, 0)
+        title = data['title']
+        author = data['author']
+        subreddit = data['subreddit']
+        score = data['score']
+        comments = data['num_comments']
+
+        mod_status = ' [M]' if data['distinguished'] == 'moderator' else ''
+        sticky_status = ' [sticky]' if data['stickied'] else ''
+
+        b.l_say(
+            'Reddit post: %s%s%s%s by %s%s%s' % (
+                BOLD, title, sticky_status, RESET, BOLD, author, mod_status
+            ), i
+        )
+        b.l_say(
+            'Subreddit: %s | Score: %s | Comments: %s' \
+            % (subreddit, score, comments), i
+        )
+
+    if i.args > 0:
+        for link in i.args:
+            if '.reddit.com/' in i.args[0].lower():
+                parselink(i.args[0].lower())
+
     else:
         b.l_say('Usage: .parsereddit <link>', i, 0)
     return True
+
 
 def reddit(l, b, i):
     """
@@ -54,3 +58,19 @@ def reddit(l, b, i):
     !r user
     """
     return parsereddit(l, b, i)
+
+
+def _chat(bot, args):
+    n, c, m = args
+    if '.reddit.com/' in ' '.join(m):
+        input = bot.new_input(n, c, m)
+        # Treat input as a command.
+        input.set_command('parsereddit')
+        input.set_level(1)
+        input.set_user(bot.get_user(n))
+        input.args = []
+        # Handle multiple links
+        for word in m:
+            if '.reddit.com/' in word:
+                input.args.append(word)
+        bot.plugins.process_command(bot, input)

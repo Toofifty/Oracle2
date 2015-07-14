@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from format import PURPLE, CYAN, WHITE, ORANGE, GREEN, RED, WHITE, BLUE
+from format import PURPLE, CYAN, ORANGE, GREEN, RED, BLUE, RESET, BOLD
 from threading import Thread
 import math
 import random
@@ -42,22 +42,22 @@ def ng(l, b, i):
         b.l_say(str, i, 0)
 
     def help(l, b, i):
-        p('%s=== Number Game Help Guide ===' % PURPLE)
-        p('\tTo start a new game, use %s.ng new%s. You will then be ' % (CYAN, WHITE))
+        p('%s=== Number Game Help Guide ===' % ORANGE)
+        p('\tTo start a new game, use %s.ng new%s. You will then be ' % (CYAN, RESET))
         p('\tgiven an interval, everyone in the chat will be able to')
         p('\tguess the number. Close guesses will result in         ')
         p('\tcumulative points, until the max amounts of points have')
-        p('\tbeen awarded. Use %s.ng guess <number> %sto guess, OR  ' % (CYAN, WHITE))
-        p('\tuse %s.ng play%s to enter a mode in which everything   ' % (CYAN, WHITE))
+        p('\tbeen awarded. Use %s.ng guess <number> %sto guess, OR  ' % (CYAN, RESET))
+        p('\tuse %s.ng play%s to enter a mode in which everything   ' % (CYAN, RESET))
         p('\tyou type in chat will be treated as a guess. Exit this ')
-        p('\tmode with %s.ng stop%s.' % (CYAN, WHITE))
-        p('%s=== End help ===' % PURPLE)
+        p('\tmode with %s.ng stop%s.' % (CYAN, RESET))
+        p('%s=== End help ===' % ORANGE)
         return True
 
     def new(l, b, i):
         global GAME
         if GAME is not None:
-            b.l_say('%sThere\'s already a Number Game running!' % RED, i, 0)
+            b.l_say('%sThere\'s already a Number Game running!' % BOLD, i, 0)
             return True
 
         min = 0
@@ -79,8 +79,8 @@ def ng(l, b, i):
 
         p('Creating new Number Game, with')
         p('range (%s%d%s, %s%d%s) and decimals %s%s%s.' \
-                % (CYAN, min, WHITE, CYAN, max, WHITE,
-                   CYAN, str_dec, WHITE))
+                % (CYAN, min, RESET, CYAN, max, RESET,
+                   CYAN, str_dec, RESET))
         GAME = Game(b, min, max, dec)
 
     def cancel(l, b, i):
@@ -124,13 +124,13 @@ def ng(l, b, i):
     def play(l, b, i):
         global PLAYERS
         PLAYERS.append(i.nick)
-        p('You are now in %sPLAY%s mode.' % (CYAN, WHITE))
+        p('You are now in %sPLAY%s mode.' % (BOLD, RESET))
         return True
 
     def stop(l, b, i):
         global PLAYERS
         PLAYERS.remove(i.nick)
-        p('You are now %snot%s in %sPLAY%s mode.' % (CYAN, WHITE, CYAN, WHITE))
+        p('You are now %snot%s in %sPLAY%s mode.' % (BOLD, RESET, BOLD, RESET))
         return True
 
 
@@ -150,7 +150,7 @@ class Game(Thread):
     BASE_MULT = 15
     MAX_MULT = 10
     MAX_VARIANCE = 0.4
-    FORMAT = '%s[%sNumbers%s]' % (WHITE, ORANGE, WHITE)
+    FORMAT = '%s[%sNumbers%s]' % (RESET, ORANGE, RESET)
 
     def __init__(self, bot, min=-1000, max=1000, dec=False):
         Thread.__init__(self)
@@ -201,11 +201,11 @@ class Game(Thread):
 
     def print_start(self, interval, max_points):
         self.bot.say('%s A new Number Game has begun!' \
-                     ' Use %s.ng guess <n> %sto guess.' % (self.FORMAT, CYAN, WHITE), 'all')
+                     ' Use %s.ng guess <n> %sto guess.' % (self.FORMAT, BOLD, RESET), 'all')
 
         self.bot.say('%s The number is between %s%s%s and %s%s%s.'\
-                     % (self.FORMAT, CYAN, format(interval[0], ',d'), WHITE,
-                        CYAN, format(interval[1], ',d'), WHITE), 'all')
+                     % (self.FORMAT, CYAN, format(interval[0], ',d'), RESET,
+                        CYAN, format(interval[1], ',d'), RESET), 'all')
         self.bot.say('%s Points up for grabs: %s+%d'\
                      % (self.FORMAT, GREEN, max_points), 'all')
 
@@ -213,7 +213,7 @@ class Game(Thread):
 
         if int(guess) == self.number or float(guess) == self.number:
             self.bot.say('%s %s guessed correctly! %s+%s%s points' \
-                          % (self.FORMAT, BLUE+nick+WHITE, GREEN, format(int(self.points), ',d'), WHITE), 'all')
+                          % (self.FORMAT, BOLD+nick+RESET, GREEN, format(int(self.points), ',d'), RESET), 'all')
             # award points here
             self.bot.get_user(nick).add_points(int(self.points))
             return 'win'
@@ -228,21 +228,21 @@ class Game(Thread):
             give_reward = False
             if reward_mult > 0.05:
                 self.bot.say('%s %s was rewarded %s%s%s points for their guess of %s%d%s.'\
-                             % (self.FORMAT, BLUE+nick+WHITE, GREEN, format(int(reward), ',d'), WHITE,
-                                CYAN, guess, WHITE), 'all')
-                give_reward = True
+                             % (self.FORMAT, BOLD+nick+RESET, GREEN, format(int(reward), ',d'), RESET,
+                                CYAN, guess, RESET), 'all')
                 self.bot.get_user(nick).add_points(int(reward))
+                self.points = 0
             else:
                 if self.number > guess:
                     self.bot.say('%s Higher! Pool dropped to %s+%s%s points.' \
-                                 % (self.FORMAT, GREEN, format(int(self.points), ',d'), WHITE), 'all')
+                                 % (self.FORMAT, GREEN, format(int(self.points), ',d'), RESET), 'all')
                 else:
                     self.bot.say('%s Lower! Pool dropped to %s+%s%s points.'
-                                 % (self.FORMAT, GREEN, format(int(self.points), ',d'), WHITE), 'all')
+                                 % (self.FORMAT, GREEN, format(int(self.points), ',d'), RESET), 'all')
 
             if self.points <= 0:
-                self.bot.say('%s Game over! Pool dropped to %s0%s!' % (self.FORMAT, GREEN, WHITE), 'all')
-                self.bot.say('%s The number was %s%s%s.' % (self.FORMAT, GREEN, self.number, WHITE), 'all')
+                self.bot.say('%s Game over! Pool dropped to %s0%s!' % (self.FORMAT, GREEN, RESET), 'all')
+                self.bot.say('%s The number was %s%s%s.' % (self.FORMAT, GREEN, self.number, RESET), 'all')
                 self.number = None
                 if give_reward:
                     return 'win'
@@ -256,11 +256,6 @@ def _delete():
 
 def _chat(bot, args):
     nick, channel, message = args
-    if nick == 'RapidSurvival' or nick == 'RapidCreative':
-        if not '<' in message[0] and '>' in message[0]:
-            return
-        nick = message[0].replace('<', '').replace('>', '')
-        message = message[1:]
 
     global PLAYERS
     if nick in PLAYERS:

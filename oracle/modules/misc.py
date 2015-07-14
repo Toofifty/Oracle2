@@ -1,10 +1,6 @@
-import random
-import re
-from re import compile
-import socket
-import traceback
-from time import sleep
+import random, re, socket, traceback, time
 from math import *
+from sympy.parsing.sympy_parser import parse_expr
 
 from format import CYAN, GREY, PURPLE, WHITE
 
@@ -20,6 +16,14 @@ except:
 def _init(bot):
     print '\t%s loaded' % __name__
 
+def utc(l, b, i):
+    """
+    !d Get the current UTC time
+    !r user
+    """
+    b.l_say('Current UTC time: %s' % str(time.asctime(time.gmtime())), i, 0)
+    return True
+
 def pick(l, b, i):
     """
     !d Pick an option from a list (separated by a space)
@@ -29,66 +33,14 @@ def pick(l, b, i):
     if len(i.args) < 2:
         b.l_say('Usage: %s.pick <options...>' % CYAN, i, 0)
         return True
-    choice = random.randint(1, len(i.args)) - 1
-    b.l_say('%s: %s' % (i.nick, i.args[choice]), i, 1)
+    b.l_say('%s: %s' % (i.nick, _pick(i.args)), i, 1)
     return True
 
-def nether(l, b, i):
-    """
-    !d Overworld coordinates - Nether conversion
-    !a <x> [y] <z>
-    !r user
-    """
-    def usage():
-        b.l_say('Usage: %s.nether <x> [y] <z>' % CYAN, i, 0)
+def _pick(options):
+    choice = random.randint(0, len(options) - 1)
+    return options[choice]
 
-    if len(i.args) < 2:
-        usage()
-    elif len(i.args) == 2:
-        try:
-            x = math.floor(float(i.args[0]) / 8)
-            z = math.floor(float(i.args[1]) / 8)
-            b.l_say('Nether co-ords: %dx, %dz' % (x, z), i, 0)
-        except:
-            usage()
-    else:
-        try:
-            x = math.floor(float(i.args[0]) / 8)
-            y = i.args[1]
-            z = math.floor(float(i.args[2]) / 8)
-            b.l_say('Nether co-ords: %dx, %dy, %dz' % (x, y, z), i, 0)
-        except:
-            usage()
-    return True
-
-def overworld(l, b, i):
-    """
-    !d Nether coordinates - Overworld conversion
-    !a <x> [y] <z>
-    !r user
-    """
-    def usage():
-        b.l_say('Usage: %s.overworld <x> [y] <z>' % CYAN, i, 0)
-
-    if len(i.args) < 2:
-        usage()
-    elif len(i.args) == 2:
-        try:
-            x = math.floor(float(i.args[0]) * 8)
-            z = math.floor(float(i.args[1]) * 8)
-            b.l_say('Overworld co-ords: %dx, %dz' % (x, z), i, 0)
-        except:
-            usage()
-    else:
-        try:
-            x = math.floor(float(i.args[0]) * 8)
-            y = i.args[1]
-            z = math.floor(float(i.args[2]) * 8)
-            b.l_say('Overworld co-ords: %dx, %dy, %dz' % (x, y, z), i, 0)
-        except:
-            usage()
-    return True
-
+'''
 def alias(l, b, i):
     """!parent-command
     !c new
@@ -113,7 +65,7 @@ def alias(l, b, i):
         !r user
     """
     def new(l, b, i):
-        splitter = compile(r'"(.*?)" "(.*?)"')
+        splitter = re.compile(r'"(.*?)" "(.*?)"')
         message = ' '.join(i.args[1:])
         spl_match = splitter.match(message)
         if spl_match is not None:
@@ -159,7 +111,7 @@ def alias(l, b, i):
         b.l_say('Usage: %s.alias new|list|remove' % CYAN, i, 0)
     return True
     #====================================================================#
-
+'''
 def calc(l, b, i):
     """
     !d Perform high-level maths

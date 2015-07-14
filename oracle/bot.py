@@ -63,14 +63,14 @@ class Oracle(irc.IRC):
             return
 
         # End of MOTD
-        if '376' in w[1] and self.config.nick in w[2]:
+        if '376' in w[1] and self.nick in w[2]:
             if self.config.verbose:
                 print 'Joining channel...'
             self.join_channels()
             return
 
         # NickServ asking for authentication
-        if 'NickServ!' in w[0] and 'nickname' in w[4]:
+        if 'NickServ!' in w[0] and len(w) > 4 and 'nickname' in w[4]:
             self.send_('NICKSERV IDENTIFY %s %s\r\n'\
                        % (self.config.nick, self.config.password))
             return True
@@ -100,7 +100,7 @@ class Oracle(irc.IRC):
             self.plugins.event(self, 'whois_330', (w[3], w[4]))
             try:
                 if not self.users.has_key(w[3]):
-                    self.users[w[3]] = user.User(w[4])
+                    self.users[w[3]] = self.get_user(w[4])
                     self.users[w[3]].set_nick(w[3])
             except:
                 traceback.print_exc()
@@ -172,44 +172,22 @@ class Oracle(irc.IRC):
             returns int -> 0-2, 0 being most private
             """
 
-            if char == self.config.char:
-                return 1
             if char == self.config.prchar:
                 return 0
+            if char == self.config.char:
+                return 1
             if char == self.config.puchar:
                 return 2
 
         self.plugins.event(self, 'chat', (nick, channel, message))
 
-        bot = ''
-        if nick == 'RapidSurvival' or nick == 'RapidCreative':
-            try:
-                bot = nick
-
-                # Check if the message is player chat, and
-                # get new nick and message
-                if message[0].startswith('<'):
-                    nick = message[0].replace('<', '').replace('>', '')
-                    message = message[1:]
-
-                # Check if the message is player private message,
-                # and get new nick and message
-                elif message[1] is 'whispers':
-                    nick = message[0]
-                    message = message[2:]
-
-            except IndexError:
-                # Message might contain other things (death messages, etc)
-                # So we won't throw a fuss if it's not in the format
-                # we want.
-                pass
-
         # Get a user from the nick. This is important for
         # later on.
-        user = self.try_create_user(nick)
+        user = self.get_user(nick)
         # Update the 'seen' field every message
         user.update_seen()
 
+        '''
         # Check through the aliases within the user's
         # file, and see if any match
         for alias in user.get_alias_list():
@@ -218,32 +196,17 @@ class Oracle(irc.IRC):
                 message = []
                 message = user.get_alias(alias).split(' ')
                 print 'Alias recieved, "%s" to %s' % (alias, message)
-
+        '''
         # Create a new Input instance, seems easier
         # than a dictionary to work with.
         input = Input(nick, channel, message)
 
-        # If 'bot' has been set to either of the bots,
-        # set it in the Input instance.
-        if bot is not '': input.ingame(bot)
-
         # Set the user
         input.set_user(user)
 
-        # Parse something that looks like a youtube link
-        if 'https://www.youtube.com/watch?v' in ' '.join(message):
-            # Fake a command, since the logic is within the
-            # YouTube module.
-            input.set_command('parseyoutube')
-            input.set_level(1)
-            input.args = []
-            # Handle multiple links
-            for word in message:
-                if 'https://www.youtube.com/' in word:
-                    input.args.append(word)
-            return self.plugins.process_command(self, input)
-
         charset = (self.config.char, self.config.prchar, self.config.puchar)
+
+        user.update()
 
         # Check if the message is actually a command.
         for c in charset:
@@ -311,8 +274,6 @@ class Oracle(irc.IRC):
         @returns Boolean -> module reloaded
         """
 
-        print 'Reloading modules...'
-
         # Reload all if we don't have any arguments.
         # Unfortunately, does not reload the main
         # classes.
@@ -321,20 +282,29 @@ class Oracle(irc.IRC):
 
         # Go through modules given
         for m_s in input.args:
-            try:
-                m = self.plugins.get_module_from_string(m_s)
-            except KeyError:
-                # Module not found
-                self.l_say('%s is not a valid module, try modules.%s'\
-                            % (m_s, m_s), input, 0)
-                return False
-
-            # Reload it, if it was found
-            if self.plugins.reload_module(m, self, input):
-                self.l_say('%s reloaded.' % m_s, input, 0)
+            self.reload_module(m_s, input)
 
         # This is fine, errors are handled nicely.
         return True
+
+
+    def reload_module(self, module, input):
+        """Reload a single module.
+
+        @returns Boolean -> success
+        """
+
+        try:
+            m = self.plugins.get_module_from_string(module)
+            self.plugins.reload_module(m, self, input)
+
+        except KeyError:
+            # Module not found
+            if 'modules.' in module:
+                self.l_say('%s could no be reloaded.' % module)
+                return False
+
+            return self.reload_module('modules.' + module, input)
 
 
     def get_char(self):
@@ -344,57 +314,13 @@ class Oracle(irc.IRC):
         return self.char
 
 
-    def open_user(self, name):
-        """Opens a new user class - in order
-        to not need upper-level imports in the
-        modules.
-
-        @returns user.User()
-        """
-
-        return user.User(name)
-
-
     def get_user(self, nick):
-        """Tries to grab a user from self.users
-        if none are found does not create a new file
-
-        @returns user.User() or False -> user not found
-        """
-
-        p = os.path.join('..', 'files', 'users')
-
-        try:
-            # Check if in current loaded users
-            return self.users[nick]
-
-        except KeyError:
-            # Check if user has a file
-            if nick + '.json' in os.listdir(p):
-                self.users[nick] = self.open_user(nick)
-                return self.users[nick]
-
-            else:
-                return False
-
-
-    def try_create_user(self, nick):
-        """Tries to grab a user from self.get_user()
-        if none are found, creates a new one
+        """Returns a user object for the specified nick.
 
         @returns user.User()
         """
 
-        user = self.get_user(nick)
-
-        # If get_user couldn't find them, create a new user
-        if not user:
-            self.users[nick] = self.open_user(nick)
-            return self.users[nick]
-
-        # If they were found by get_user
-        else:
-            return user
+        return user.get_user(nick)
 
 
     def get_version(self):
@@ -465,7 +391,6 @@ class Input(object):
         """
         self.user = user
         return self.user
-
 
 
 def parse_options():
@@ -559,7 +484,9 @@ def main():
     while True:
         try:
             readbuffer += bot.recv(32)
-        except (SystemExit):
+        except SystemExit:
+            raise
+        except KeyboardInterrupt:
             raise
         except Exception, e:
             print e

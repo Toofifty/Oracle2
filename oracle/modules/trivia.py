@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 
-import yaml
-import random
-import time
-import traceback
+import misc
+import yaml, random, time, traceback
 from os import path, listdir
 from threading import Thread
 
-from format import PURPLE, WHITE, GREEN, BLUE
+from format import PURPLE, WHITE, GREEN, BLUE, RESET, BOLD
+
+winning_alts = [
+    'got the answer!',
+    'knows their stuff!',
+    'is a genius!',
+    'is a trivia master!'
+]
 
 cls = None
 
@@ -31,21 +36,29 @@ class TriviaClass(Thread):
         self.current_interval = interval
         self.bot = bot
         self.current = ''
-        self.format = '%s[%sTrivia%s]' % (WHITE, PURPLE, WHITE)
+        self.format = '[%sTrivia%s]' % (PURPLE, RESET)
         self.disabled = False
         self.dead = False
         self.kickstarters = []
         print '\t\t%s thread started' % __name__
 
     def load_trivia(self):
-        questions = {}
-        for f in listdir(path.join('..', 'files', 'trivia')):
-            if 'disabled' in f:
-                continue;
-            else:
-                with open(path.join('..', 'files', 'trivia', f)) as file:
-                    questions.update(yaml.load(file))
-        return questions
+        try:
+            questions = {}
+            for f in listdir(path.join('..', 'files', 'trivia')):
+                if 'disabled' in f:
+                    continue;
+                else:
+                    with open(path.join('..', 'files', 'trivia', f)) as f:
+                        questions_list = f.read().strip().split('\n')
+                    for line in questions_list:
+                        qa = line.split(': ')
+                        question = qa[0]
+                        answers = qa[1]
+                        questions[question] = answers.lower().strip().split(', ')
+            return questions
+        except:
+            traceback.print_exc()
 
     def get_time_remaining(self):
         return self.current_interval
@@ -54,23 +67,21 @@ class TriviaClass(Thread):
         if nick in self.kickstarters:
             return 0
         self.kickstarters.append(nick)
-        diff = random.randint(10, 360)
+        diff = random.randint(60, 720)
         self.current_interval -= diff
         return diff
 
     def get_question(self):
         return random.choice(self.questions.keys())
 
-    def get_answer(self, question=None):
-        if question is not None:
-            for k, v in self.questions.iteritems():
-                if k == question:
-                    return str(v).capitalize()
+    def get_answers(self, question=None):
+        if question is not '' and question is not None:
+            return self.questions[question]
         else:
             for k, v in self.questions.iteritems():
                 if k == self.current:
-                    return str(v).lower()
-        return "No answer found."
+                    return v
+        return 'No answer found.'
 
     def guess(self, guess):
         if self.check(guess):
@@ -81,7 +92,7 @@ class TriviaClass(Thread):
 
     def check(self, guess):
         g = str(' '.join(guess))
-        if g.lower() == self.get_answer():
+        if g.lower() in self.get_answers():
             return True
         return False
 
@@ -104,15 +115,13 @@ class TriviaClass(Thread):
 
     def print_question(self):
         if self.current != '':
-            self.bot.say('%s %s (%d)' % (self.format, self.current,
-                                         len(self.get_answer().split(' '))), 'all')
-            self.bot.say('%s Use .a [answer] to answer.' % self.format, 'all')
+            self.bot.say('%s %s' % (self.format, self.current), 'all')
+            self.bot.say('%s Use .a <answer> to answer.' % self.format, 'all')
             return
         self.bot.say('%s There is no trivia question at the moment.' % self.format, 'all')
 
     def end_cycle(self):
         self.current = self.get_question()
-        self.answer = self.get_answer()
         self.print_question()
 
     def kill(self):
@@ -153,8 +162,8 @@ def trivia(l, b, i):
         !r user
     !c answer
         !d Get the answer to the current trivia question
-        !r administrator
         !a [question]
+        !r administrator
     !c checktime
         !d Check how long until the next trivia question
         !r user
@@ -186,16 +195,16 @@ def trivia(l, b, i):
     def answer(l, b, i):
         global cls
         if i.args > 2:
-            answer = cls.get_answer(' '.join(i.args[1:]))
+            answer = cls.get_answers(' '.join(i.args[1:]))
         else:
-            answer = cls.get_answer()
+            answer = cls.get_answers()
         b.l_say(answer, i, 0)
 
     def checktime(l, b, i):
         global cls
         time_rem = cls.get_time_remaining()
         b.l_say('%s Time remaining: %s%d%s seconds (~%s%d%s minutes).' %
-            (cls.format, GREEN, time_rem, WHITE, GREEN, time_rem/60, WHITE), i, 0)
+            (cls.format, BOLD, time_rem, RESET, BOLD, time_rem/60, RESET), i, 0)
 
     def kickstart(l, b, i):
         global cls
@@ -204,13 +213,13 @@ def trivia(l, b, i):
             b.l_say('%s Sorry! You can\'t kickstart multiple times per round.' % cls.format, i, 0)
         else:
             b.l_say('%s %s%s%s kickstarted the trivia! They knocked %s%d%s seconds off the clock.' %
-                (cls.format, PURPLE, i.nick, WHITE, GREEN, amount, WHITE), i, 1)
+                (cls.format, BOLD, i.nick, RESET, BOLD, amount, RESET), i, 1)
 
     try:
         exec ('%s(l, b, i)' % i.args[0]) in globals(), locals()
     except Exception, e:
         traceback.print_exc()
-        b.l_say('Usage: .trivia info', i, 0)
+        info(l, b, i)
     return True
 
 def a(l, b, i):
@@ -222,8 +231,9 @@ def a(l, b, i):
     global cls
     correct, reward = cls.guess(i.args)
     if correct:
-        b.l_say('%s %s%s%s got the answer! %s+%d%s points' % (cls.format,
-            BLUE, i.nick, WHITE, GREEN, reward, WHITE), i, 1)
+        b.l_say('%s %s%s%s %s %s+%d%s points' % (cls.format,
+            BOLD, i.nick, RESET, misc._pick(winning_alts), BOLD, reward,
+            RESET), i, 1)
         new_points = b.get_user(i.nick).add_points(reward)
         b.l_say('New score: %s' % format(new_points, ',d'), i, 0)
     elif cls.is_running():
@@ -231,3 +241,12 @@ def a(l, b, i):
     else:
         b.l_say('%s There is no trivia question at the moment.' % (cls.format), i, 0)
     return True
+
+'''
+def t(l, b, i):
+    """
+    !d Alias command for trivia
+    !r user
+    """
+    return trivia(l, b, i)
+'''

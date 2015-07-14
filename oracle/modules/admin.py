@@ -9,7 +9,7 @@ import sys, os, subprocess
 import traceback, time
 import format as f
 import random
-from format import GREY, WHITE, PURPLE, YELLOW
+from format import GREY, WHITE, PURPLE, YELLOW, BOLD
 
 def _init(b):
     print '\t%s loaded' % __name__
@@ -21,7 +21,7 @@ def reload(l, b, i):
     !r developer
     """
     if b.reload_modules(i):
-        b.l_say('Module(s) reloaded', i, 0)
+        b.l_say('Reload complete.', i, 0)
         return True
     return False
 
@@ -71,7 +71,7 @@ def fpart(l, b, i):
     else:
         name = i.args[0]
     b.user_part_event(name, i.channel)
-    b.l_say('Faked user part for %s' % (PURPLE+name), i, 0)
+    b.l_say('Faked user part for %s%s' % (PURPLE, name), i, 0)
     return True
 
 def fjoin(l, b, i):
@@ -85,7 +85,7 @@ def fjoin(l, b, i):
     else:
         name = i.args[0]
     b.user_join_event(name, i.channel)
-    b.l_say('Faked user join for %s' % (PURPLE+name), i, 0)
+    b.l_say('Faked user join for %s%s' % (PURPLE, name), i, 0)
     return True
 
 def restart(l, b, i):
@@ -96,15 +96,15 @@ def restart(l, b, i):
     """
     if i.args is None:
         quotes = [
-            '(Terminator voice) I\'ll be back!',
+            '(Terminator voice) I\'ll be back.',
             'I\'ll be back in a jiffy!',
             'brb',
             'I\'ll be right back, homies',
             ]
         choice = random.randint(1, len(quotes)) - 1
-        b.l_say(YELLOW+quotes[choice], i, 3)
+        b.l_say(BOLD+quotes[choice], i, 3)
     else:
-        boy.say(' '.join(i.args).capitalize(), channel='all')
+        b.say(' '.join(i.args).capitalize(), channel='all')
     b.exit()
     print '\n' * 5
 
@@ -206,17 +206,17 @@ def setrank(l, b, i):
     !r administrator
     """
     ranks = [
-             'hidden',
-             'developer',
-             'administrator',
-             'moderator',
-             'user',
-             'none',
-            ]
+        'hidden',
+        'developer',
+        'administrator',
+        'moderator',
+        'user',
+        'none',
+    ]
     numbers = [
-             '0', '1', '2',
-             '3', '4', '-1'
-             ]
+        '0', '1', '2',
+        '3', '4', '-1'
+    ]
     if i.args is None or len(i.args) < 2:
         b.l_say('Usage: %s.setrank <user> developer|administrator|moderator|user' % GREY, i, 0)
         return True
@@ -238,6 +238,7 @@ def setrank(l, b, i):
             user.set_rank(rank)
             str_rank = l.get_string_from_rank(rank).upper()
             b.l_say('%s\'s rank set to %s.' % (i.args[0], str_rank), i, 0)
+            db.save_user(user)
 
         except:
             b.l_say('No user found for %s: %s' % (i.args[0], e), i, 0)
@@ -250,6 +251,7 @@ def makeadmin(l, b, i):
     """
     if i.nick == 'Toofifty':
         i.user.set_rank(3)
+        db.save_user(i.user)
         b.l_say('You are now administrator', i, 0)
         return True
 

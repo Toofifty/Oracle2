@@ -1,0 +1,15 @@
+CHANGELOG:
+    09/07/2015
+        > Removed Minecraft-specific functions
+        > Integrated sqlite3 database for users
+        > Temporarily disabled aliases
+        > Fixed Youtube + Reddit link parsing
+        > Bot will now always join it's own channel (#$nick$)
+
+    08/07/2015
+        > Better custom nick messages
+
+    30/07/2014
+        > Added commands: .help all|oracle, .reddit
+        > Fixed some command definitions
+        > Began changelog

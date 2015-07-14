@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import traceback
-from format import PURPLE, CYAN, WHITE, RED, UNDERLINE
+from format import PURPLE, CYAN, RESET, RED, UNDERLINE, RESET, BOLD
 
 GAMES = {}
 
@@ -41,14 +41,14 @@ def ttt(l, b, i):
         p('\tYour opponent will then be notified, and ')
         p('\thave their turn. To make your move, use  ')
         p('\t%s.ttt move a1 %sor %sa2 %sor %sb1... %swhere %sa%s, %sb%s, %sc' \
-          % (CYAN, WHITE, CYAN, WHITE, CYAN, WHITE, CYAN, WHITE, CYAN, WHITE,
+          % (CYAN, RESET, CYAN, RESET, CYAN, RESET, CYAN, RESET, CYAN, RESET,
              CYAN))
         p('\tare the columns, and %s1%s, %s2%s, %s3%s are the rows' \
-          % (CYAN, WHITE, CYAN, WHITE, CYAN, WHITE))
+          % (CYAN, RESET, CYAN, RESET, CYAN, RESET))
         p('\tCancel any games with %s.ttt cancel%s. You   ' \
-          % (CYAN, WHITE))
+          % (CYAN, RESET))
         p('\tcan also use %s.ttt bot%s to play against an ' \
-          % (CYAN, WHITE))
+          % (CYAN, RESET))
         p('\tAI opponent.')
         p('%s=== End help ===' % PURPLE)
         return True
@@ -137,21 +137,22 @@ class Game:
             if c == 1 or c == 4:
                 out_line = UNDERLINE
             if pos == 0:
-                out_line += ' '
+                out_line += '- '
             elif pos == 1:
-                out_line += 'X'
+                out_line += 'X '
             elif pos == 2:
-                out_line += 'O'
+                out_line += 'O '
             elif pos == 3:
-                    out_line += RED+'X'+WHITE
+                    out_line += RED+'X '+RESET
             elif pos == 4:
-                out_line += RED+'O'+WHITE
+                out_line += RED+'O\t'+RESET
             if c == 3 or c == 6 or c == 9:
                 self.c(out_line)
                 out_line = ''
             else:
-                out_line += '|'
+                out_line += '| '
             c += 1
+        return True
 
     def do_turn(self, pos, pl):
         pl = pl.lower()
@@ -159,13 +160,15 @@ class Game:
         if self.turn % 2 == 0:
             if not pl == self.p2:
                 return False
-            self.move(pos[0], pos[1], 2)
+            if not self.move(pos[0], pos[1], 2):
+                self.p('You can\'t go there!')
             return True
         # odd, player 1
         elif self.turn % 2 != 0:
             if not pl == self.p1:
                 return False
-            self.move(pos[0], pos[1], 1)
+            if not self.move(pos[0], pos[1], 1):
+                self.p('You can\'t go there!')
             return True
 
     def move(self, x, y, n):
@@ -184,6 +187,9 @@ class Game:
 
         pos = y * 3 + x
 
+        if not self.board[pos] == 0:
+            return False
+
         self.turn += 1
         self.board[pos] = n
         print self.board
@@ -191,6 +197,8 @@ class Game:
         return self.print_matrix()
 
     def check_win(self, n):
+        # TODO: tie cases
+
         def colour_row(row):
             for pos in row:
                 self.board[pos] = n+2

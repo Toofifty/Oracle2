@@ -52,9 +52,7 @@ class IRC(socket.socket):
             # nope.
             if 'pass' in match:
                 continue
-            print s
             s = s.replace('$%s$' % match, str(eval('self.' + match)))
-            print s
 
         if self.config.verbose:
             print '--> %s'% s.rstrip()
@@ -92,10 +90,14 @@ class IRC(socket.socket):
 
         for c in self.channels:
             self.join_channel(c)
+        self.join_channel(self.nick)
 
     def join_channel(self, channel):
         """Join a specific channel.
         """
+
+        if not '#' in channel:
+            channel = '#' + channel
 
         self.send_('JOIN %s' % channel)
         if not channel in self.channels:
@@ -156,27 +158,10 @@ class IRC(socket.socket):
 
         @returns Boolean -> if message was sent
         """
-
-        # Check if the message is from the game
-        if input.game is not '':
-
-            # Set nick to the bot that sent the message
-            nick = input.game
-
-            # If the input level is 0, we need to private
-            # message the user a bit differently.
-            if input.level == 0 or f_level == 0:
-                m = input.nick + ' ' + m
-        else:
-
-            nick = input.nick
-
         # User is asking for a private message.
         # Private message is highest priority.
         if input.level == 0:
-            if input.game is not '':
-                return self.pmsg(nick, m)
-            return self.msg(nick, m)
+            return self.msg(input.nick, m)
 
         # User isn't fussed on if the message is
         # private or not. Priority goes to
@@ -185,9 +170,7 @@ class IRC(socket.socket):
 
             # Function is supposed to be private.
             if f_level == 0:
-                if input.game is not '':
-                    return self.pmsg(nick, m)
-                return self.msg(nick, m)
+                return self.msg(input.nick, m)
 
             # Function is supposed to go to the
             # channel.

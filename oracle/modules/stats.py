@@ -5,10 +5,10 @@ stats.py plugin module
 http://toofifty.me/oracle
 """
 
-import os, inspect, traceback
-import operator
+import db
+import os, inspect, traceback, operator
 
-from format import CYAN, WHITE, GREY, PURPLE, RED, GREEN, _random
+from format import CYAN, WHITE, GREY, PURPLE, RED, GREEN, _random, BOLD, RESET
 
 def _init(bot):
     print '\t%s loaded' % __name__
@@ -25,21 +25,16 @@ def seen(l, b, i):
     else:
         seen = None
         try:
-            seen = b.users[i.args[0]].get_seen()
+            seen, diff = b.users[i.args[0]].get_seen()
         except KeyError:
-            for f in os.listdir(os.path.join('..', 'files', 'users')):
-                try:
-                    print f
-                    f = f.replace('.json', '')
-                    # Hehe, flower
-                    print f
-                    if f.lower() == i.args[0].lower():
-                        seen = b.open_user(f).get_seen()
-                except KeyError:
-                    continue
+            seen, diff = b.get_user(i.args[0]).get_seen()
+        except:
+            pass
 
         if seen is not None:
-            b.l_say('Last seen: %s' % PURPLE + seen, i, 0)
+            m, s = divmod(diff, 60)
+            h, m = divmod(m, 60)
+            b.l_say('Last seen: %s%s (%d:%02d:%02d ago)' % (BOLD, seen, h, m, s), i, 0)
         else:
             b.l_say('User %s not found in the database.' % (GREY + i.args[0] + WHITE),
                        i, 0)
@@ -85,36 +80,24 @@ def score(l, b, i):
     PATH = os.path.join('..', 'files', 'users')
 
     def top(l, b, i):
-        all_scores = {}
-        for file in os.listdir(PATH):
-            name = file.replace('.json', '')
-            all_scores[name] = b.get_user(name).get_points()
-        sorted_scores = sorted(all_scores.iteritems(), key = operator.itemgetter(1),
-                               reverse = True)
         amount = int(i.args[1]) if len(i.args) > 1 else 5
+        if amount > 20:
+            amount = 20
+            b.l_say('Amount can\'t be greater than 20.', i, 0)
         n = 1
-        for line in sorted_scores:
-            b.l_say('%s%s%s. %s - %s%s' % (CYAN, str(n), WHITE, line[0],
-                                           GREEN, str(int(line[1]))),
-                    i, 0)
+        for user in db.top_scores(amount):
+            if user.get_points() == 0:
+                return True
+            b.l_say('%d. %s (%d)' % (n, user.get_name(), user.get_points()), i)
             n += 1
-            if n > amount: break
         return True
 
     def check(l, b, i):
-        n = i.nick
-        if not n + '.json' in os.listdir(PATH):
-            return b.l_say('%sYou don\'t seem to have a user file - make one '
-                           'by rejoining the IRC channel.' % RED, i, 0)
-        user = b.get_user(n)
-        return b.l_say('You have %s%d%s points.' % (GREEN, user.get_points(), WHITE), i, 0)
-        return b.l_say('You have %s%d%s points.' % (GREEN, user.get_points(),
+        return b.l_say('You have %s%d%s points.' % (GREEN, i.user.get_points(),
                                                     WHITE), i, 0)
 
     def peek(l, b, i):
         n = i.args[1]
-        if not n + '.json' in os.listdir(PATH):
-            return b.l_say('%s does not seem to have a user file.' % (GREY + n + WHITE), i, 0)
         user = b.get_user(n)
         b.l_say('%s has %s%d%s points.' % (GREY+user.get_name()+WHITE, GREEN, user.get_points(), WHITE), i, 0)
 
